@@ -1,11 +1,24 @@
+use anchor_lang::prelude::*;
+
+
 #[derive(InitSpace)]
-#[account(discriminator=1)]
-pub stuct Escrow {
-    pub seed: u64,
-    pub maker: Pubkey,
-    pub taker: Pubkey
-    pub mint_a: Pubkey,
-    pub mint_b: Pubkey,
-    pub receive: u64,
+#[account]
+pub stuct Job {
+    pub client: Pubkey,
+    pub freelancer: Option<Pubkey>,
+    pub amount: u64,
+    pub status: JobStatus,
+
+    #[max_len(50)]
+    pub title: String,
     pub bump: u8,
+    pub job_id: u64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, InitSpace)]
+pub enum JobStatus {
+    Open,
+    InProgress,
+    Delivered,
+    Completed,
 }
