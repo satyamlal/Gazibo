@@ -1,0 +1,1 @@
+# Gazibo - onChain Solana based freelace platform
