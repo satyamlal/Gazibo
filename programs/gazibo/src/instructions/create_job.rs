@@ -42,7 +42,7 @@ pub fn handler(ctx: Context<CreateJob>, title: String, amount: u64, job_id: u64)
 
     system_program::transfer(
         CpiContext::new(
-            ctx.accounts.system_program.key(),
+            ctx.accounts.system_program.to_account_info(),
             system_program::Transfer {
                 from: ctx.accounts.client.to_account_info(),
                 to: ctx.accounts.job.to_account_info(),
