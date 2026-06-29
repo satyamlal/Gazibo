@@ -1,10 +1,9 @@
-
 use {
     anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
     litesvm::LiteSVM,
+    solana_keypair::Keypair,
     solana_message::{Message, VersionedMessage},
     solana_signer::Signer,
-    solana_keypair::Keypair,
     solana_transaction::versioned::VersionedTransaction,
 };
 
@@ -16,11 +15,21 @@ fn test_initialize() {
     let bytes = include_bytes!("../../../target/deploy/gazibo.so");
     svm.add_program(program_id, bytes).unwrap();
     svm.airdrop(&payer.pubkey(), 1_000_000_000).unwrap();
-    
+
     let instruction = Instruction::new_with_bytes(
         program_id,
-        &gazibo::instruction::Initialize {}.data(),
-        gazibo::accounts::Initialize {}.to_account_metas(None),
+        &gazibo::instruction::CreateJob {
+            title,
+            amount,
+            job_id,
+        }
+        .data(),
+        gazibo::accounts::CreateJob {
+            client,
+            job,
+            system_program,
+        }
+        .to_account_metas(None),
     );
 
     let blockhash = svm.latest_blockhash();
