@@ -11,7 +11,7 @@ pub use state::*;
 
 declare_id!("5bTvxVfSwqy7FApuPfHiXBWihZSmLSQNsGwVebNeLj7D");
 
-#[program]
+    #[program]
 pub mod gazibo {
     use super::*;
 

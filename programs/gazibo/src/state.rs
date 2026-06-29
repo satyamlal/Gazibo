@@ -1,9 +1,8 @@
 use anchor_lang::prelude::*;
 
-
 #[derive(InitSpace)]
 #[account]
-pub stuct Job {
+pub struct Job {
     pub client: Pubkey,
     pub freelancer: Option<Pubkey>,
     pub amount: u64,
