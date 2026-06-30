@@ -26,7 +26,12 @@ pub struct CreateJob<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(ctx: Context<CreateJob>, title: String, amount: u64, job_id: u64) -> Result<()> {
+pub fn create_job_handler(
+    ctx: Context<CreateJob>,
+    title: String,
+    amount: u64,
+    job_id: u64,
+) -> Result<()> {
     require!(amount > 0, GaziboError::InvalidAmount);
     require!(!title.is_empty(), GaziboError::TitleEmpty);
     require!(title.len() <= MAX_TITLE_LENGTH, GaziboError::TitleTooLong);
@@ -42,7 +47,7 @@ pub fn handler(ctx: Context<CreateJob>, title: String, amount: u64, job_id: u64)
 
     system_program::transfer(
         CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             system_program::Transfer {
                 from: ctx.accounts.client.to_account_info(),
                 to: ctx.accounts.job.to_account_info(),

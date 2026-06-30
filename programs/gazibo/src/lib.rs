@@ -6,7 +6,7 @@ pub mod instructions;
 pub mod state;
 
 pub use constants::*;
-use instructions::{AcceptJob, CreateJob, DeliverJob, ReleasePayment};
+pub use instructions::*;
 pub use state::*;
 
 declare_id!("5bTvxVfSwqy7FApuPfHiXBWihZSmLSQNsGwVebNeLj7D");
@@ -21,18 +21,18 @@ pub mod gazibo {
         amount: u64,
         job_id: u64,
     ) -> Result<()> {
-        instructions::create_job::handler(ctx, title, amount, job_id)
+        instructions::create_job::create_job_handler(ctx, title, amount, job_id)
     }
 
     pub fn accept_job(ctx: Context<AcceptJob>) -> Result<()> {
-        instructions::accept_job::handler(ctx)
+        instructions::accept_job::accept_job_handler(ctx)
     }
 
     pub fn deliver_job(ctx: Context<DeliverJob>) -> Result<()> {
-        instructions::deliver_job::handler(ctx)
+        instructions::deliver_job::deliver_job_handler(ctx)
     }
 
     pub fn release_payment(ctx: Context<ReleasePayment>) -> Result<()> {
-        instructions::release_payment::handler(ctx)
+        instructions::release_payment::release_payment_handler(ctx)
     }
 }
