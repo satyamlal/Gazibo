@@ -1,25 +1,38 @@
 use {
-    anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
+    anchor_lang::{
+        prelude::Pubkey, solana_program::instruction::Instruction, InstructionData, ToAccountMetas,
+    },
     litesvm::LiteSVM,
     solana_keypair::Keypair,
     solana_message::{Message, VersionedMessage},
     solana_signer::Signer,
     solana_transaction::versioned::VersionedTransaction,
+    std::{fs, path::PathBuf},
 };
 
 #[test]
 fn test_initialize() {
     let program_id = gazibo::id();
     let payer = Keypair::new();
+    let client = payer.pubkey();
+    let title = String::from("Website design");
+    let amount = 1_000_000;
+    let job_id: u64 = 1;
+    let (job, _) = Pubkey::find_program_address(
+        &[gazibo::JOB_SEED, client.as_ref(), &job_id.to_le_bytes()],
+        &program_id,
+    );
     let mut svm = LiteSVM::new();
-    let bytes = include_bytes!("../../../target/deploy/gazibo.so");
-    svm.add_program(program_id, bytes).unwrap();
+    let program_path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/deploy/gazibo.so");
+    let bytes = fs::read(program_path).unwrap();
+    svm.add_program(program_id, bytes.as_slice()).unwrap();
     svm.airdrop(&payer.pubkey(), 1_000_000_000).unwrap();
 
     let instruction = Instruction::new_with_bytes(
         program_id,
         &gazibo::instruction::CreateJob {
-            title,
+            title: title.clone(),
             amount,
             job_id,
         }
@@ -27,7 +40,7 @@ fn test_initialize() {
         gazibo::accounts::CreateJob {
             client,
             job,
-            system_program,
+            system_program: anchor_lang::system_program::ID,
         }
         .to_account_metas(None),
     );
