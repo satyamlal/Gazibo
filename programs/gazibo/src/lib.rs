@@ -18,10 +18,11 @@ pub mod gazibo {
     pub fn create_job(
         ctx: Context<CreateJob>,
         title: String,
+        description: String,
         amount: u64,
         job_id: u64,
     ) -> Result<()> {
-        instructions::create_job::create_job_handler(ctx, title, amount, job_id)
+        instructions::create_job::create_job_handler(ctx, title, description, amount, job_id)
     }
 
     pub fn accept_job(ctx: Context<AcceptJob>) -> Result<()> {

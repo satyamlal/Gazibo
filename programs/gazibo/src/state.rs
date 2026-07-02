@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 #[derive(InitSpace)]
 #[account]
-pub struct Job {
+pub struct JobAccount {
     pub client: Pubkey,
     pub freelancer: Option<Pubkey>,
     pub amount: u64,
@@ -15,11 +15,11 @@ pub struct Job {
     pub description: String,
 
     pub job_id: u64,
-    pub create_at: i64,
+    pub created_at: i64,
     pub bump: u8,
 }
 
-impl Job {
+impl JobAccount {
     pub fn space(title_len: usize, desc_len: usize) -> usize {
         8 + // Anchor discriminator (always first, always 8 bytes)
         32 + // client: Pubkey
