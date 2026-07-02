@@ -1,7 +1,8 @@
+use anchor_lang::prelude::*;
+
 use crate::constants::*;
 use crate::error::GaziboError;
 use crate::state::{JobAccount, JobStatus};
-use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct DeliverJob<'info> {
@@ -20,21 +21,24 @@ pub struct DeliverJob<'info> {
 }
 
 pub fn deliver_job_handler(ctx: Context<DeliverJob>) -> Result<()> {
-    let job = &mut ctx.accounts.job_account;
+    let job_account = &mut ctx.accounts.job_account;
     let freelancer_key = ctx.accounts.freelancer.key();
 
-    require!(job.status == JobStatus::Open, GaziboError::JobNotOpen,);
+    require!(
+        job_account.status == JobStatus::Open,
+        GaziboError::JobNotOpen
+    );
 
     require!(
-        freelancer_key != job.client,
+        freelancer_key != job_account.client,
         GaziboError::ClientCannotBeFreelancer
     );
 
-    job.freelancer = Some(freelancer_key);
-    job.status = JobStatus::InProgress;
+    job_account.freelancer = Some(freelancer_key);
+    job_account.status = JobStatus::InProgress;
 
     emit!(JobAccepted {
-        job_id: job.job_id,
+        job_id: job_account.job_id,
         freelancer: freelancer_key,
     });
 
