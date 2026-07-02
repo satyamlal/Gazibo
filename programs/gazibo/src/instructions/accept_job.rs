@@ -1,37 +1,47 @@
-use crate::constants::*;
-use crate::error::GaziboError;
-use crate::state::{Job, JobStatus};
 use anchor_lang::prelude::*;
+
+use crate::constants::JOB_SEED;
+use crate::error::GaziboError;
+use crate::state::{JobAccount, JobStatus};
 
 #[derive(Accounts)]
 pub struct AcceptJob<'info> {
-    #[account(mut)]
     pub freelancer: Signer<'info>,
 
     #[account(
         mut,
         seeds = [
             JOB_SEED,
-            job.client.as_ref(),
-            &job.job_id.to_le_bytes(),
+            job_account.client.as_ref(),
+            &job_account.job_id.to_le_bytes(),
         ],
-        bump = job.bump
+        bump = job_account.bump
     )]
-    pub job: Account<'info, Job>,
+    pub job_account: Account<'info, JobAccount>,
 }
 
 pub fn accept_job_handler(ctx: Context<AcceptJob>) -> Result<()> {
-    let job = &mut ctx.accounts.job;
-    let freelancer = ctx.accounts.freelancer.key();
+    let job_account = &mut ctx.accounts.job_account;
+    let freelancer_key = ctx.accounts.freelancer.key();
 
-    require!(job.status == JobStatus::Open, GaziboError::JobNotOpen);
     require!(
-        job.client != freelancer,
+        job_account.status == JobStatus::Open,
+        GaziboError::JobNotOpen
+    );
+    require!(
+        job_account.client != freelancer_key,
         GaziboError::ClientCannotBeFreelancer,
     );
 
-    job.freelancer = Some(freelancer);
-    job.status = JobStatus::InProgress;
+    // Assign the transition
+    job_account.freelancer = Some(freelancer_key);
+    job_account.status = JobStatus::InProgress;
 
     Ok(())
+}
+
+#[event]
+pub struct JobAccepted {
+    pub job_id: u64,
+    pub freelancer: Pubkey,
 }
