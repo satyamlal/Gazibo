@@ -37,6 +37,11 @@ pub fn accept_job_handler(ctx: Context<AcceptJob>) -> Result<()> {
     job_account.freelancer = Some(freelancer_key);
     job_account.status = JobStatus::InProgress;
 
+    emit!(JobAccepted {
+        job_id: job_account.job_id,
+        freelancer: freelancer_key,
+    });
+
     Ok(())
 }
 
