@@ -2,6 +2,8 @@ use anchor_lang::prelude::*;
 
 #[constant]
 pub const JOB_SEED: &[u8] = b"job";
+pub const CLIENT_PROFILE_SEED: &[u8] = b"client_profile";
+
 pub const MAX_TITLE_LENGTH: usize = 50;
 pub const MAX_DESC_LENGTH: usize = 500;
 
