@@ -59,8 +59,7 @@ pub enum JobStatus {
     InProgress,
     Delivered,
     Completed,
-    Cancelled,
-}
+    Cancelled}
 
 impl Default for JobStatus {
     fn default() -> Self {

@@ -36,6 +36,9 @@ pub enum GaziboError {
     #[msg("The client can't be the freelancer on their own job!")]
     ClientCannotBeFreelancer,
 
+    #[msg("Client profile not initialized, Call initialize_client first")]
+    ClientNotInitialized,
+
     // Input Validation
     #[msg("Payment must be >== 0.01 SOL (1,000,000 Lamports)")]
     AmountTooLow,
