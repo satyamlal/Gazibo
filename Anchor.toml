@@ -2,11 +2,15 @@
 package_manager = "yarn"
 
 [features]
+seeds = false
 resolution = true
 skip-lint = false
 
 [programs.localnet]
 gazibo = "5bTvxVfSwqy7FApuPfHiXBWihZSmLSQNsGwVebNeLj7D"
+
+[registry]
+url = "https://api.apr.dev/"
 
 [provider]
 cluster = "localnet"
