@@ -46,11 +46,11 @@ pub struct ClientProfile {
 
 impl ClientProfile {
     pub const SPACE: usize = 8 + // discriminator 
-                                32 + // client
-                                8 + // job_counter
-                                8 + // total_spent
-                                4 + //active jobs
-                                1; // bump
+                            32 + // client
+                            8 + // job_counter
+                            8 + // total_spent
+                            4 + //active jobs
+                            1; // bump
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, InitSpace)]
@@ -59,7 +59,8 @@ pub enum JobStatus {
     InProgress,
     Delivered,
     Completed,
-    Cancelled}
+    Cancelled,
+}
 
 impl Default for JobStatus {
     fn default() -> Self {
