@@ -15,14 +15,18 @@ declare_id!("5bTvxVfSwqy7FApuPfHiXBWihZSmLSQNsGwVebNeLj7D");
 pub mod gazibo {
     use super::*;
 
+    pub fn initialize_client(ctx: Context<InitializeClient>) -> Result<()> {
+        initialize_client_handler(ctx)
+    }
+
     pub fn create_job(
         ctx: Context<CreateJob>,
+        job_id: u64,
         title: String,
         description: String,
         amount: u64,
-        job_id: u64,
     ) -> Result<()> {
-        instructions::create_job::create_job_handler(ctx, title, description, amount, job_id)
+        instructions::create_job::create_job_handler(ctx, job_id, title, description, amount)
     }
 
     pub fn accept_job(ctx: Context<AcceptJob>) -> Result<()> {
