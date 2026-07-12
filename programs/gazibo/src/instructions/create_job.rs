@@ -7,7 +7,7 @@ use crate::state::{JobAccount, JobStatus};
 use crate::ClientProfile;
 
 #[derive(Accounts)]
-#[instruction(title: String, description: String, job_id: u64)]
+#[instruction(title: String, description: String, amount: u64, job_id: u64)]
 pub struct CreateJob<'info> {
     #[account(
         mut,
@@ -38,10 +38,10 @@ pub struct CreateJob<'info> {
 
 pub fn create_job_handler(
     ctx: Context<CreateJob>,
-    job_id: u64,
     title: String,
     description: String,
     amount: u64,
+    job_id: u64,
 ) -> Result<()> {
     require!(amount > MIN_AMOUNT_LAMPORTS, GaziboError::AmountTooLow);
     require!(!title.is_empty(), GaziboError::TitleEmpty);

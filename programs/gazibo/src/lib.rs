@@ -16,17 +16,17 @@ pub mod gazibo {
     use super::*;
 
     pub fn initialize_client(ctx: Context<InitializeClient>) -> Result<()> {
-        initialize_client_handler(ctx)
+        instructions::initialize_client::initialize_client_handler(ctx)
     }
 
     pub fn create_job(
         ctx: Context<CreateJob>,
-        job_id: u64,
         title: String,
         description: String,
         amount: u64,
+        job_id: u64,
     ) -> Result<()> {
-        instructions::create_job::create_job_handler(ctx, job_id, title, description, amount)
+        instructions::create_job::create_job_handler(ctx, title, description, amount, job_id)
     }
 
     pub fn accept_job(ctx: Context<AcceptJob>) -> Result<()> {
@@ -35,6 +35,10 @@ pub mod gazibo {
 
     pub fn deliver_job(ctx: Context<DeliverJob>) -> Result<()> {
         instructions::deliver_job::deliver_job_handler(ctx)
+    }
+
+    pub fn cancel_job(ctx: Context<CancelJob>) -> Result<()> {
+        instructions::cancel_job::cancel_job_handler(ctx)
     }
 
     pub fn release_payment(ctx: Context<ReleasePayment>) -> Result<()> {

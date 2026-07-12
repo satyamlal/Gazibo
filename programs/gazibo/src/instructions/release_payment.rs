@@ -18,6 +18,7 @@ pub struct ReleasePayment<'info> {
     #[account(mut)]
     pub client: Signer<'info>,
 
+    /// CHECK: This account is only used as a lamport recipient and is validated against the stored freelancer pubkey.
     #[account(mut)]
     pub freelancer: UncheckedAccount<'info>,
 }

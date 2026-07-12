@@ -25,8 +25,8 @@ pub fn deliver_job_handler(ctx: Context<DeliverJob>) -> Result<()> {
     let freelancer_key = ctx.accounts.freelancer.key();
 
     require!(
-        job_account.status == JobStatus::Open,
-        GaziboError::JobNotOpen
+        job_account.status == JobStatus::InProgress,
+        GaziboError::JobNotInProgress
     );
 
     require!(
@@ -35,9 +35,9 @@ pub fn deliver_job_handler(ctx: Context<DeliverJob>) -> Result<()> {
     );
 
     job_account.freelancer = Some(freelancer_key);
-    job_account.status = JobStatus::InProgress;
+    job_account.status = JobStatus::Delivered;
 
-    emit!(JobAccepted {
+    emit!(JobDelivered {
         job_id: job_account.job_id,
         freelancer: freelancer_key,
     });
@@ -46,7 +46,7 @@ pub fn deliver_job_handler(ctx: Context<DeliverJob>) -> Result<()> {
 }
 
 #[event]
-pub struct JobAccepted {
+pub struct JobDelivered {
     pub job_id: u64,
     pub freelancer: Pubkey,
 }
