@@ -43,7 +43,6 @@ pub fn deliver_job_handler(ctx: Context<DeliverJob>) -> Result<()> {
         GaziboError::UnauthorizedFreelancer
     );
 
-    job_account.freelancer = Some(freelancer_key);
     job_account.status = JobStatus::Delivered;
 
     emit!(JobDelivered {
