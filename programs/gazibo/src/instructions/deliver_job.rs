@@ -34,6 +34,15 @@ pub fn deliver_job_handler(ctx: Context<DeliverJob>) -> Result<()> {
         GaziboError::ClientCannotBeFreelancer
     );
 
+    let assigned = job_account
+        .freelancer
+        .ok_or(error!(GaziboError::NoFreelancerAssigned))?;
+
+    require!(
+        freelancer_key == assigned,
+        GaziboError::UnauthorizedFreelancer
+    );
+
     job_account.freelancer = Some(freelancer_key);
     job_account.status = JobStatus::Delivered;
 
