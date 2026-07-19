@@ -1,16 +1,46 @@
 import type { Metadata } from "next";
 import { AppWalletProvider } from "@/components/WalletProvider";
 import { Navbar } from "@/components/layout/Navbar";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Gazibo — Freelance Escrow on Solana",
+  title: "Gazibo — Trustless Freelance Escrow on Solana",
   description:
-    "Post jobs, lock payments in escrow, release on delivery. Powered by Solana + Anchor.",
+    "The decentralized workspace protocol for elite engineering talent. Zero platform fees, instant smart-contract escrow, on-chain reputation. Built on Solana.",
+  keywords: [
+    "Solana",
+    "freelance",
+    "escrow",
+    "Web3",
+    "decentralized",
+    "smart contract",
+    "dApp",
+    "gig",
+    "gig workers",
+    "freelancers",
+    "developers",
+    "video editors",
+    "top freelancers",
+    "cheap freelancers",
+    "web3 developers",
+    "web3 freelancers",
+    "solana freelancers",
+    "solana based freelancers",
+  ],
 };
 
 export default function RootLayout({
@@ -19,14 +49,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className="dark">
+      <body
+        className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased`}
+      >
         <AppWalletProvider>
-          <div className="min-h-screen bg-slate-50 flex flex-col">
+          <div className="min-h-screen flex flex-col">
             <Navbar />
-            <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-              {children}
-            </main>
+            <main className="flex-1">{children}</main>
           </div>
         </AppWalletProvider>
       </body>
