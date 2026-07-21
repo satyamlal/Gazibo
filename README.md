@@ -1,181 +1,223 @@
 # Gazibo — Solana Freelance Escrow Platform
 
-Gazibo is an on-chain freelance escrow dApp built with Anchor (Rust) and Next.js. Clients lock SOL into escrow when posting a job; freelancers accept and deliver; clients release payment on approval — all enforced by the on-chain program.
+Gazibo is a Solana-based freelance escrow application built with **Anchor** for the on-chain program and **Next.js** for the frontend.
 
-This guide gets the full stack (local validator + Anchor program + Next.js frontend) running from a clean clone.
+The workflow is simple:
 
-## Prerequisites
+- A client creates a job and locks SOL in escrow.
+- A freelancer accepts and works on the job.
+- The client releases the payment after delivery is approved.
 
-- **Rust**, installed via [rustup](https://rustup.rs). This repo pins the exact compiler version via `rust-toolchain.toml` (currently `1.89.0`) — rustup will fetch it automatically the first time you build, you don't need to install it manually.
-- **Solana CLI**
-- **Anchor CLI**, installed and version-managed via `avm` (`cargo install --git https://github.com/coral-xyz/anchor avm --locked --force`)
-- **Node.js 18+**
-- **Phantom** or **Solflare** browser extension
+The smart contract enforces the escrow flow on-chain, while the frontend provides the user interface for wallet connection, job management, and protocol interaction.
 
----
+## Tech Stack
 
-## ⚠️ Read this first if you're on WSL
+- **Rust / Anchor** for the Solana program.
+- **Solana CLI** for local validator and deployment.
+- **Next.js / TypeScript** for the frontend.
+- **Wallet adapter** support for Phantom or Solflare.
+- **npm** for the frontend and app packages.
 
-If your project folder is under `/mnt/c/...` (i.e. it's on your Windows drive, opened from WSL), `solana-test-validator` **will fail to start**, hanging on "Initializing..." and then erroring with:
+## Repository Structure
 
+```text
+programs/gazibo/   On-chain Anchor program
+frontend/          Next.js application
+app/               Standalone client script for program interaction
 ```
-⠒ Unable to connect to validator: Client error: test-ledger/admin.rpc does not exist
-```
 
-This isn't a project bug. WSL's Windows-drive mount (DrvFs) doesn't support Unix domain sockets, and the validator needs one (`admin.rpc`) to report that it's ready. If the ledger lives on `/mnt/c/...`, that socket can never be created.
+## Requirements
 
-**Fix — always launch the validator from your Linux home directory, not the project folder:**
+Before you start, make sure you have the following installed on a **Linux system or WSL**:
+
+- Rust installed through [`rustup`](https://rustup.rs/).
+- Solana CLI.
+- Anchor CLI installed through `avm`.
+- Node.js 18+.
+- npm.
+- Phantom or Solflare wallet extension.
+
+## Linux / WSL Only
+
+This project is intended to run on **Linux or WSL**.
+
+If you are using WSL, keep the repository inside the Linux filesystem, such as:
 
 ```bash
-cd ~
-solana-test-validator --reset
+$ /home/<your-user>/projects/gazibo
 ```
 
-The validator doesn't need to sit inside the project — it's a standalone process everything else talks to over RPC (`http://127.0.0.1:8899`). Your code stays on `/mnt/c/...`; only the ledger location changes.
+Do **not** place it under a Windows-mounted path like `/mnt/c/...` for local validator work. Solana local validator tooling depends on Unix sockets and works reliably from the Linux filesystem.
 
----
+## Installation
 
-## 1. Clone and install
+Clone the repository:
 
 ```bash
-git clone https://github.com/satyamlal/Gazibo.git
-cd Gazibo
+$ git clone https://github.com/satyamlal/Gazibo.git
+$ cd Gazibo
 ```
 
-This repo has two independent JS dependency trees — use the right manager for each:
+## Install Dependencies
 
-| Location | Package manager | What it's for |
-|---|---|---|
-| repo root | `yarn` | Anchor's own tooling (prettier, mocha/chai — not currently used, no tests exist yet) |
-| `frontend/` | `npm` | The actual Next.js dApp |
-
-You only need `frontend/`'s dependencies to run the app — that's Step 4 below.
-
----
-
-## 2. Terminal 1 — Local validator
+Install the frontend dependencies:
 
 ```bash
-cd ~
-solana-test-validator --reset
+$ cd frontend
+$ npm install
 ```
 
-- `--reset` wipes the local ledger and starts from a fresh genesis block on every run — no stale accounts, no stale program deployments, no stale balances.
-- Leave this running in its own terminal for the rest of the session.
-
----
-
-## 3. Terminal 2 — Build and deploy the program
-
-**One-time setup** — install the exact Anchor CLI version this repo is pinned to (see `Anchor.toml`'s `[toolchain]` block):
+If you want to use the standalone client app:
 
 ```bash
-avm install 0.31.1
+$ cd ../app
+$ npm install
 ```
 
-This compiles Anchor CLI from source and can take several minutes — that's normal. You shouldn't need to run `avm use` afterward: because the version is pinned in `Anchor.toml`, the `anchor` command auto-selects `0.31.1` whenever you run it inside this repo. If you ever see an "anchor-lang version / CLI version don't match" warning anyway, run `avm use 0.31.1` manually as a fallback.
+## Run the Local Validator
 
-**Every time you change the Rust program:**
+Start a local Solana validator in a separate terminal:
 
 ```bash
-cd /path/to/Gazibo
-anchor build
-anchor deploy
-cp target/idl/gazibo.json frontend/src/idl/gazibo.json
+$ cd ~
+$ solana-test-validator --reset
 ```
 
-Do **not** add `RUSTC_BOOTSTRAP` or `RUSTFLAGS` to this command. See the troubleshooting table below for why.
+Keep this terminal open while developing.
 
----
+## Build and Deploy the Program
 
-## 4. Terminal 3 — Frontend
+From the repository root:
 
 ```bash
-cd frontend
-npm install
-npm run dev
+$ anchor build
+$ anchor deploy
 ```
 
-Open `http://localhost:3000`.
+If you change the on-chain program, rebuild and redeploy it before testing the frontend again.
 
----
+## Start the Frontend
 
-## 5. Connect your wallet to the local validator
-
-Phantom and Solflare point at Mainnet or Devnet by default — you have to explicitly tell them about your local validator:
-
-1. Open Phantom → **Settings → Developer Settings** → turn on **Testnet Mode**.
-2. In the network switcher, select **Localhost** (`http://127.0.0.1:8899`).
-3. Click **Connect** in the Gazibo app.
-
----
-
-## 6. Checking your balance / airdropping from the terminal
-
-Balance checks and airdrops only ever need your wallet's **public address** — never your password or private key. Phantom only asks for a password to unlock its UI or to *sign* a transaction; neither of those is a signature.
-
-**First, point the CLI at your local validator once, so you don't need `--url` on every command:**
+From the `frontend/` directory:
 
 ```bash
-solana config set --url http://127.0.0.1:8899
+$ npm run dev
 ```
 
-### Option A — simplest, recommended
-
-Copy your address once from Phantom (click your account name → Copy Address), then save it as a variable so you never have to paste it again:
+Open the app at:
 
 ```bash
-export GAZIBO_WALLET="<paste your Phantom address here>"
+$ http://localhost:3000
 ```
 
-Add that line to `~/.bashrc` (or `~/.zshrc`) to keep it across terminal sessions. Then:
+## Wallet Setup
+
+To use the app locally:
+
+- Open Phantom or Solflare.
+- Switch the wallet to the **Localhost** network.
+- Connect the wallet to the app.
+
+If needed, fund the wallet with local SOL using the Solana CLI:
 
 ```bash
-solana balance $GAZIBO_WALLET
-solana airdrop 10 $GAZIBO_WALLET
+$ solana airdrop 10 <wallet-address>
 ```
 
-### Option B — unify your CLI and Phantom identity (optional)
+## Project Notes
 
-Import Phantom's Secret Recovery Phrase into a local Solana CLI keypair file, so `solana balance` and `solana airdrop` work with **no arguments at all**, and it's the exact same wallet your browser is using.
+- `frontend/src/idl/gazibo.json` contains the program IDL used by the UI.
+- `programs/gazibo/` contains the Anchor program logic.
+- `migrations/deploy.ts` can be used for deployment-related scripting.
+- `app/src/client.ts` is a standalone client entry point.
 
-> ⚠️ **Only do this with a wallet you use purely for localnet testing.** This writes your private key to a plaintext file on disk. Never do it with a seed phrase that holds real funds.
+## Development Workflow
 
-```bash
-solana-keygen recover 'prompt:?key=0/0' --outfile ~/.config/solana/phantom-local.json
+A typical local development flow looks like this:
+
+1. Start the local validator.
+2. Build and deploy the Anchor program.
+3. Start the frontend.
+4. Connect a local wallet.
+5. Test the escrow flow end to end.
+
+## Contributing
+
+Contributions are welcome.
+
+### Before you contribute
+
+- Use **Linux or WSL only**.
+- Keep the repo in the Linux filesystem when using WSL.
+- Make sure the program builds before opening a pull request.
+- Avoid committing generated build artifacts such as `.next/`, `target/`, or local validator data.
+
+### How to contribute
+
+1. Fork the repository.
+```
+$ git clone https://github.com/<your-username>/Gazibo.git
+$ cd Gazibo
+$ git remote add upstream https://github.com/satyamlal/Gazibo.git
 ```
 
-This prompts you to paste your Secret Recovery Phrase (Phantom → Settings → Security & Privacy → Show Secret Recovery Phrase), shows you the recovered public key, and asks you to confirm before writing the file. Then:
-
-```bash
-solana config set --keypair ~/.config/solana/phantom-local.json
-solana balance
-solana airdrop 10
+2. Create a new branch for your change.
+```
+$ git checkout -b feat/your-feature-name
 ```
 
----
-
-## Troubleshooting
-
-| Error signature | Real root cause | Fix |
-|---|---|---|
-| `Unable to connect to validator: ... admin.rpc does not exist` | Validator was launched from a `/mnt/c/...` path — Unix sockets aren't supported on WSL's Windows-drive mount. | `cd ~` before running `solana-test-validator --reset`. |
-| `connect ECONNREFUSED 127.0.0.1:8899` | The validator isn't running, or it silently failed to start. | Check Terminal 1 for the error above; start/restart it from `~`. |
-| `Attempt to load a program that does not exist` | Program compiled but was never deployed to *this* validator instance — common right after `--reset`, which wipes deployed programs too. | `anchor build && anchor deploy` |
-| `Attempt to debit an account but found no record of a prior credit` | The signing wallet has zero SOL on this validator — usually because `--reset` wiped every balance and you haven't re-airdropped since. | Airdrop to the exact connected wallet address (§6). |
-| `AnchorError ... JobNotOpen` / `JobNotInProgress` / `JobNotDelivered` / `JobNotCancellable` / `UnauthorizedFreelancer` / `NotJobClient` / etc. | **Not a bug.** These are the program correctly rejecting an instruction called in the wrong order — e.g. releasing payment before delivery, or someone other than the assigned freelancer trying to deliver. Full list in `programs/gazibo/src/error.rs`. | Fix the call order on the client. Only redeploy (`anchor build && anchor deploy`) if you're certain the sequence is correct and it still throws. |
-| `error[E0425]: cannot find type 'SourceFile' in crate 'proc_macro'` while compiling `proc-macro2` | Caused by manually setting `RUSTC_BOOTSTRAP=1 RUSTFLAGS="--cfg procmacro2_semver_exempt"`. This forces `proc-macro2` down a nightly-only path that calls compiler APIs removed from Rust long ago. | Don't set these environment variables — run plain `anchor build`. |
-| `failed to select a version for solana-sdk` / litesvm build errors (`agave_feature_set::FeatureSet` type mismatch, `MessageProcessor` not found, etc.) | Solana's ecosystem crates broke semver mid-2.x-line when `agave-feature-set` split off from `solana-feature-set`. `litesvm 0.5.0` was tested against `solana-program-runtime 2.1.10`; a loose caret range lets Cargo silently resolve a newer, incompatible patch. | Already fixed — `programs/gazibo/Cargo.toml` pins `solana-program-runtime`, `solana-svm`, `solana-bpf-loader-program`, `solana-fee`, `solana-runtime-transaction`, and `solana-sdk` to exactly `=2.1.10`. If this resurfaces after adding a new dependency, check what version it pulled — don't delete `Cargo.lock` or any tests as a shortcut. |
-| Hydration mismatch involving `WalletMultiButton` or any wallet-adapter UI component | Server-rendered HTML doesn't match the client's first render, because wallet-adapter components read `localStorage` (browser-only) to check for a previously connected wallet. | Import the component with `next/dynamic` and `{ ssr: false }` so it never renders on the server. |
-| `anchor-lang version(...) and the current CLI version(...) don't match` warning | Anchor CLI isn't using the version pinned for this repo. | Run `avm install <version from Anchor.toml>` once (§3) — the `[toolchain]` block handles the rest automatically. |
-| `error: binary 'anchor' already exists in destination` while running `avm install` | `avm` doesn't have permission to overwrite an `anchor` binary that wasn't installed through avm. | `rm -f ~/.cargo/bin/anchor`, then re-run `avm install 0.31.1`. |
-
----
-
-## Project layout
-
+3. Make your changes in a focused commit.
 ```
-programs/gazibo/   Rust/Anchor on-chain program
-frontend/           Next.js app (npm) — the actual dApp
-app/                 Standalone CLI script for scripting against the program directly (npm, optional)
+$ git status
+$ git add .
+$ git commit -m "feat: describe your change"
 ```
+
+Please keep your commits smaller and cleaner, stage only the files related to one change at a time:
+```
+$ git add path/to/file1 path/to/file2
+$ git commit -m "fix: update escrow flow validation"
+```
+
+4. Test the program and frontend locally.
+Run the validator in one terminal-1:
+```
+$ cd ~
+$ solana-test-validator --reset
+```
+
+Build and deploy the program in terminal-2 from the repo root:
+```
+$ anchor build
+$ anchor deploy
+```
+
+Start the frontend
+```
+$ cd frontend
+$ npm install
+$ npm run dev
+```
+
+5. Submit a pull request with a clear explanation of your changes.
+```
+$ git push -u origin feat/your-feature-name
+```
+
+
+### Good contribution areas
+
+- Bug fixes in the Anchor program.
+- Frontend improvements.
+- Better wallet and UX handling.
+- Documentation improvements.
+- Tests and deployment scripts.
+
+
+## Acknowledgements
+
+Built with:
+
+- [Anchor](https://www.anchor-lang.com/)
+- [Solana](https://solana.com/)
+- [Next.js](https://nextjs.org/)

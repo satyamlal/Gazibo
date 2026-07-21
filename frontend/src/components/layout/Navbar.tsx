@@ -49,6 +49,9 @@ export function Navbar() {
         <div className="flex items-center gap-10">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
+            <span className="h-6 w-6 rounded-md bg-gradient-to-br from-[#174BD4] to-[#85DABE] flex items-center justify-center text-white font-extrabold text-xs">
+              G
+            </span>
             <span
               className="
                 text-lg font-bold tracking-tight
