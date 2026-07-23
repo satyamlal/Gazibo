@@ -55,4 +55,20 @@ pub enum GaziboError {
     // Arithmetic Safety
     #[msg("Arithmetic overflow in lamport calculation")]
     ArithmeticOverflow,
+
+    // Gig Control
+    #[msg("Gig title can't be empty")]
+    GigTitleEmpty,
+
+    #[msg("Gig title is too Long. Max 80 characters")]
+    GitTooLong,
+
+    #[msg("Metadata URI is too long. Max 100 characters")]
+    MetadataUriTooLong,
+
+    #[msg("Pricing must be: basic <= Standard <= Premium")]
+    InvalidPricing,
+
+    #[msg("This gig is no longer active.")]
+    GigNotActive,
 }
