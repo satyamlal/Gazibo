@@ -76,7 +76,7 @@ impl Default for JobStatus {
 #[derive(Debug)]
 pub struct FreelancerProfile {
     pub freelancer: Pubkey,
-    pub gig_count: u64,
+    pub gig_counter: u64,
     pub jobs_completed: u64,
     pub total_earned: u64,
     pub rating_sum: u64,
