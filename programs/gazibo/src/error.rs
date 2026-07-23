@@ -39,6 +39,9 @@ pub enum GaziboError {
     #[msg("Client profile not initialized, Call initialize_client first")]
     ClientNotInitialized,
 
+    #[msg("Freelancer profile not initialized. Call initialize_freelancer first.")]
+    FreelancerNotInitialized,
+
     // Input Validation
     #[msg("Payment must be >== 0.01 SOL (1,000,000 Lamports)")]
     AmountTooLow,
@@ -61,7 +64,7 @@ pub enum GaziboError {
     GigTitleEmpty,
 
     #[msg("Gig title is too Long. Max 80 characters")]
-    GitTooLong,
+    GigTitleTooLong,
 
     #[msg("Metadata URI is too long. Max 100 characters")]
     MetadataUriTooLong,
