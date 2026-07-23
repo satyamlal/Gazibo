@@ -19,6 +19,30 @@ pub mod gazibo {
         instructions::initialize_client::initialize_client_handler(ctx)
     }
 
+    pub fn initialize_freelancer(ctx: Context<InitializeFreelancer>) -> Result<()> {
+        instructions::initialize_freelancer::initialize_freelancer_handler(ctx)
+    }
+
+    pub fn create_gig(
+        ctx: Context<CreateGig>,
+        gig_id: u64,
+        title: String,
+        basic_price: u64,
+        standard_price: u64,
+        premium_price: u64,
+        metadata_uri: String,
+    ) -> Result<()> {
+        instructions::create_gig::create_gig_handler(
+            ctx,
+            gig_id,
+            title,
+            basic_price,
+            standard_price,
+            premium_price,
+            metadata_uri,
+        )
+    }
+
     pub fn create_job(
         ctx: Context<CreateJob>,
         title: String,
