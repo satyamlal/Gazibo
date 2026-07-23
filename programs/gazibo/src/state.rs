@@ -67,3 +67,46 @@ impl Default for JobStatus {
         JobStatus::Open
     }
 }
+
+// ─────────────────────────────────────────────────────────────
+// FreelancerProfile
+// ─────────────────────────────────────────────────────────────
+
+#[account]
+#[derive(Debug)]
+pub struct FreelancerProfile {
+    pub freelancer: Pubkey,
+    pub gig_count: u64,
+    pub jobs_completed: u64,
+    pub total_earned: u64,
+    pub rating_sum: u64,
+    pub rating_count: u64,
+    pub bump: u8,
+}
+
+impl FreelancerProfile {
+    pub const SPACE: usize = 8 + 32 + 8 + 8 + 8 + 4 + 4 + 1;
+}
+
+// ─────────────────────────────────────────────────────────────
+// GigAccount — 3 price tiers on-chain, full plan details on IPFS
+// ────────────────────────────────────────────────────────────
+#[account]
+pub struct GigAccount {
+    pub freelancer: Pubkey,
+    pub gig_id: u64,
+    pub title: String,
+    pub basic_price: u64,
+    pub standard_price: u64,
+    pub premium_price: u64,
+    pub is_active: bool,
+    pub created_at: i64,
+    pub metadata_uri: String,
+    pub bump: u8,
+}
+
+impl GigAccount {
+    pub fn space(title_len: usize, uri_len: usize) -> usize {
+        8 + 32 + 8 + (4 + title_len) + 8 + 8 + 8 + 1 + 8 + (4 + uri_len) + 1
+    }
+}
