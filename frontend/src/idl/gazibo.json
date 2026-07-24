@@ -104,6 +104,118 @@
       "args": []
     },
     {
+      "name": "create_gig",
+      "discriminator": [
+        175,
+        168,
+        234,
+        97,
+        64,
+        177,
+        7,
+        144
+      ],
+      "accounts": [
+        {
+          "name": "freelancer",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "freelancer_profile"
+          ]
+        },
+        {
+          "name": "freelancer_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  114,
+                  101,
+                  101,
+                  108,
+                  97,
+                  110,
+                  99,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "freelancer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "gig_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "freelancer"
+              },
+              {
+                "kind": "arg",
+                "path": "gig_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "gig_id",
+          "type": "u64"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "basic_price",
+          "type": "u64"
+        },
+        {
+          "name": "standard_price",
+          "type": "u64"
+        },
+        {
+          "name": "premium_price",
+          "type": "u64"
+        },
+        {
+          "name": "metadata_uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
       "name": "create_job",
       "discriminator": [
         178,
@@ -306,6 +418,66 @@
       "args": []
     },
     {
+      "name": "initialize_freelancer",
+      "discriminator": [
+        182,
+        60,
+        59,
+        193,
+        161,
+        141,
+        191,
+        116
+      ],
+      "accounts": [
+        {
+          "name": "freelancer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "freelancer_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  114,
+                  101,
+                  101,
+                  108,
+                  97,
+                  110,
+                  99,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "freelancer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "release_payment",
       "discriminator": [
         24,
@@ -375,6 +547,32 @@
       ]
     },
     {
+      "name": "FreelancerProfile",
+      "discriminator": [
+        142,
+        199,
+        151,
+        44,
+        211,
+        185,
+        36,
+        26
+      ]
+    },
+    {
+      "name": "GigAccount",
+      "discriminator": [
+        79,
+        90,
+        80,
+        92,
+        149,
+        143,
+        118,
+        126
+      ]
+    },
+    {
       "name": "JobAccount",
       "discriminator": [
         91,
@@ -400,6 +598,32 @@
         194,
         243,
         76
+      ]
+    },
+    {
+      "name": "FreelancerInitialized",
+      "discriminator": [
+        227,
+        79,
+        102,
+        38,
+        139,
+        130,
+        11,
+        28
+      ]
+    },
+    {
+      "name": "GigCreated",
+      "discriminator": [
+        99,
+        221,
+        204,
+        160,
+        24,
+        21,
+        102,
+        174
       ]
     },
     {
@@ -531,28 +755,58 @@
     },
     {
       "code": 6012,
+      "name": "FreelancerNotInitialized",
+      "msg": "Freelancer profile not initialized. Call initialize_freelancer first."
+    },
+    {
+      "code": 6013,
       "name": "AmountTooLow",
       "msg": "Payment must be >== 0.01 SOL (1,000,000 Lamports)"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "TitleEmpty",
       "msg": "Title can't be empty!"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "TitleTooLong",
       "msg": "Title is too long, max 50 characters allowed!"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "DescriptionTooLong",
       "msg": "Description too long, max 500 characters allowed!"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "ArithmeticOverflow",
       "msg": "Arithmetic overflow in lamport calculation"
+    },
+    {
+      "code": 6018,
+      "name": "GigTitleEmpty",
+      "msg": "Gig title can't be empty"
+    },
+    {
+      "code": 6019,
+      "name": "GigTitleTooLong",
+      "msg": "Gig title is too Long. Max 80 characters"
+    },
+    {
+      "code": 6020,
+      "name": "MetadataUriTooLong",
+      "msg": "Metadata URI is too long. Max 100 characters"
+    },
+    {
+      "code": 6021,
+      "name": "InvalidPricing",
+      "msg": "Pricing must be: basic <= Standard <= Premium"
+    },
+    {
+      "code": 6022,
+      "name": "GigNotActive",
+      "msg": "This gig is no longer active."
     }
   ],
   "types": [
@@ -592,6 +846,122 @@
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FreelancerInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "freelancer",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FreelancerProfile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "freelancer",
+            "type": "pubkey"
+          },
+          {
+            "name": "gig_counter",
+            "type": "u64"
+          },
+          {
+            "name": "jobs_completed",
+            "type": "u64"
+          },
+          {
+            "name": "total_earned",
+            "type": "u64"
+          },
+          {
+            "name": "rating_sum",
+            "type": "u64"
+          },
+          {
+            "name": "rating_count",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GigAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "freelancer",
+            "type": "pubkey"
+          },
+          {
+            "name": "gig_id",
+            "type": "u64"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "basic_price",
+            "type": "u64"
+          },
+          {
+            "name": "standard_price",
+            "type": "u64"
+          },
+          {
+            "name": "premium_price",
+            "type": "u64"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "metadata_uri",
+            "type": "string"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GigCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "freelancer",
+            "type": "pubkey"
+          },
+          {
+            "name": "gig_id",
+            "type": "u64"
+          },
+          {
+            "name": "title",
+            "type": "string"
           }
         ]
       }
