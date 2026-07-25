@@ -1,85 +1,90 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
-import { ShieldCheck, Cpu } from "lucide-react";
+import { useEffect } from 'react';
+import { useRouter } from "next/navigation";
+import { ShieldCheck, Wallet, Zap } from "lucide-react";
 
-export default function ConnectSignupPage() {
-  const { publicKey, connected } = useWallet();
-  const [loading, setLoading] = useState(false);
+const WalletMultiButton = dynamic(
+  async() => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
+  {ssr: false}
+)
 
-  const initializeProfile = async () => {
-    if (!publicKey) return;
-    setLoading(true);
-    try {
-      console.log("Trigger: program.methods.initializeClient().rpc()");
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      alert("Profile Initialized on Chain!");
-    } catch (error) {
-      console.error("Initialization transaction failed", error);
-    } finally {
-      setLoading(false);
+export default function ConnectPage() {
+  const { connected } = useWallet();
+  const router  = useRouter();
+
+  useEffect(() => {
+    if (connected) {
+      router.push("/account");
     }
-  };
-
-  if (!connected) {
-    return (
-      <div className="flex items-center justify-center min-h-[80vh] bg-[#030712] px-6">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#174BD4]/10 rounded-full blur-[100px] pointer-events-none" />
-        <Card className="w-full max-w-[420px] bg-zinc-950/40 border-white/10 backdrop-blur-md relative z-10">
-          <CardHeader className="space-y-1">
-            <div className="h-10 w-10 rounded-xl bg-[#174BD4]/15 border border-[#174BD4]/30 flex items-center justify-center text-[#85DABE] mb-2">
-              <Cpu className="h-5 w-5" />
-            </div>
-            <CardTitle className="text-2xl font-bold tracking-tight text-white">Welcome to Gazibo</CardTitle>
-            <CardDescription className="text-zinc-400">Blockchain connection required to verify cryptographic state.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-relaxed text-zinc-500 mb-6">
-              To continue setting up your decentralized freelance account, please link your hardware or browser wallet using the action button found inside the top header.
-            </p>
-            <div className="rounded-xl bg-zinc-900/50 border border-white/5 p-4 flex gap-3 items-start">
-              <ShieldCheck className="h-5 w-5 text-[#85DABE] shrink-0 mt-0.5" />
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                All workspace logs and transaction operations are signed and settled securely on top of the Solana network. We never have custody over your keys.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  },[connected, router])
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh] bg-[#030712] px-6">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#174BD4]/10 rounded-full blur-[100px] pointer-events-none" />
-      <Card className="w-full max-w-[420px] bg-zinc-950/40 border-white/10 backdrop-blur-md relative z-10">
-        <CardHeader className="space-y-1">
-          <div className="h-10 w-10 rounded-xl bg-[#174BD4]/15 border border-[#174BD4]/30 flex items-center justify-center text-[#85DABE] mb-2">
-            <ShieldCheck className="h-5 w-5" />
+    <div className="min-h-[90vh] bg-[#030712] flex items-center justify-center px-5">
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(23,75,212,0.12)_0%,transparent_70%)]" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-md text-center">
+
+        {/* Icon */}
+        <div className="flex justify-center mb-6">
+          <div className="h-14 w-14 rounded-2xl bg-[#174BD4]/15 border border-[#174BD4]/30 flex items-center justify-center text-[#85DABE]">
+            <Wallet className="h-7 w-7" />
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight text-white">Initialize Profile</CardTitle>
-          <CardDescription className="text-zinc-400">
-            Allocate on-chain memory to register your identity and start creating jobs.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-5">
-          <div className="bg-zinc-900/80 p-3.5 rounded-xl text-xs truncate font-mono border border-white/5 text-[#85DABE] flex items-center justify-between">
-            <span className="text-zinc-500">ADDR:</span>
-            <span className="truncate max-w-[200px]">{publicKey?.toBase58()}</span>
-          </div>
-          <Button 
-            onClick={initializeProfile} 
-            disabled={loading} 
-            className="w-full h-12 rounded-full bg-[#174BD4] text-white font-semibold hover:bg-[#174BD4]/90 hover:shadow-[0_0_15px_rgba(23,75,212,0.3)] transition-all duration-200"
-          >
-            {loading ? "Confirming on Network..." : "Register Profile on Solana"}
-          </Button>
-        </CardContent>
-      </Card>
+        </div>
+
+        <h1
+          className="text-3xl font-extrabold text-white tracking-tight mb-3"
+          style={{ fontFamily: "var(--font-heading, var(--font-sans))" }}
+        >
+          Connect your wallet
+        </h1>
+        <p className="text-zinc-400 text-sm mb-8 max-w-xs mx-auto leading-relaxed">
+          Your Solana wallet is your identity on Gazibo. No email, no password.
+        </p>
+
+        <div className="flex justify-center mb-10">
+          <WalletMultiButton />
+        </div>
+
+        {/* Steps */}
+        <div className="space-y-4 text-left">
+          {[
+            {
+              icon: Wallet,
+              title: "Connect wallet",
+              body: "Click the button above. Choose Phantom, Solflare, or any Solana wallet.",
+            },
+            {
+              icon: ShieldCheck,
+              title: "Choose your role",
+              body: "First-time visitors pick Client or Freelancer. One transaction, then done.",
+            },
+            {
+              icon: Zap,
+              title: "Start working",
+              body: "Post jobs, browse gigs, or accept work. Payments are locked in escrow automatically.",
+            },
+          ].map((step, i) => (
+            <div key={i} className="flex items-start gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+              <div className="h-8 w-8 rounded-lg bg-[#174BD4]/15 border border-[#174BD4]/20 flex items-center justify-center text-[#85DABE] shrink-0">
+                <step.icon className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">{step.title}</p>
+                <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{step.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-8 text-[11px] text-zinc-700">
+          Make sure Phantom is set to <span className="text-zinc-500">Localhost</span> (127.0.0.1:8899)
+        </p>
+      </div>
     </div>
   );
 }
