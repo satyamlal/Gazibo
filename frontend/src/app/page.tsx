@@ -30,23 +30,14 @@ const SOCIAL_LINKS = [
 export default function HomePage() {
   return (
     <div className="relative min-h-screen bg-[#030712] text-zinc-100 selection:bg-[#85DABE] selection:text-[#030712]">
-      {/* ── Background Effects ─────────────────────────── */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        {/* Primary radial glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-250 h-150 bg-[radial-gradient(ellipse_at_center,rgba(23,75,212,0.12)_0%,transparent_70%)]" />
-        {/* Secondary accent glow */}
         <div className="absolute top-50 right-[10%] w-100 h-100 bg-[radial-gradient(circle,rgba(133,218,190,0.06)_0%,transparent_70%)]" />
-        {/* Grid mesh pattern */}
         <div className="absolute inset-0 bg-grid-pattern opacity-40" />
       </div>
 
       <div className="relative z-10">
-        {/* ═══════════════════════════════════════════════
-            SECTION 1 — Hero
-            ═══════════════════════════════════════════════ */}
         <section className="max-w-7xl mx-auto px-5 md:px-8 pt-20 pb-16 md:pt-28 md:pb-24 text-center">
-          
-          {/* Announcement Badge */}
           <div
             className="
               inline-flex items-center gap-2 px-4 py-1.5 rounded-full
@@ -61,7 +52,6 @@ export default function HomePage() {
             <span>400ms Finality · Zero Custody</span>
           </div>
 
-          {/* Headline */}
           <h1
             className="
               text-4xl sm:text-5xl md:text-6xl lg:text-7xl
@@ -80,10 +70,9 @@ export default function HomePage() {
                 bg-clip-text text-transparent
               "
             >
-              Elite Builders
+              Elite dApp Builders
             </span>
           </h1>
-          {/* Subtitle */}
           <p
             className="
               text-zinc-400 text-base sm:text-lg md:text-xl
@@ -95,7 +84,6 @@ export default function HomePage() {
             escrow payments, gas-free milestones, and immutable on-chain
             reputation — all on Solana.
           </p>
-        {/* CTA Buttons */}
           <div
             className="
               flex flex-col sm:flex-row items-center justify-center gap-4
@@ -131,9 +119,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════════════
-            SECTION 2 — Social Proof / Stats Bar
-            ═══════════════════════════════════════════════ */}
+        {/* Social Proof */}
         <section className="border-y border-white/[0.05]">
           <div className="max-w-7xl mx-auto px-5 md:px-8 py-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
@@ -185,12 +171,9 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════════════
-            SECTION 3 — Why Gazibo (Competitive Comparison)
-            ═══════════════════════════════════════════════ */}
+        {/* Competitive Comparison */}
         <section className="max-w-7xl mx-auto px-5 md:px-8 py-20 md:py-28">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Left — Copy */}
             <div>
               <div className="text-xs font-bold tracking-[0.2em] text-[#85DABE] uppercase mb-4">
                 Why Gazibo
@@ -233,7 +216,7 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-            {/* Right — Comparison Table */}
+            {/* Comparison Table */}
             <div
               className="
                 border border-white/[0.08] rounded-2xl
@@ -260,16 +243,16 @@ export default function HomePage() {
                 },
                 {
                   rank: "02",
-                  name: "Traditional Upwork",
-                  speed: "3-5 Days",
-                  fees: "Up to 20%",
+                  name: "Other Blockchain dApps",
+                  speed: "~15 Min",
+                  fees: "$15-$40 Gas",
                   active: false,
                 },
                 {
                   rank: "03",
-                  name: "Ethereum dApps",
-                  speed: "~15 Min",
-                  fees: "$15-$40 Gas",
+                  name: "Traditional Freelance Platforms",
+                  speed: "3-5 Days",
+                  fees: "Up to 20%",
                   active: false,
                 },
                 {
@@ -331,9 +314,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════════════
-            SECTION 4 — How It Works (Step Flow)
-            ═══════════════════════════════════════════════ */}
+        {/* How It Works (Step Flow) */}
         <section className="border-t border-white/[0.05]">
           <div className="max-w-7xl mx-auto px-5 md:px-8 py-20 md:py-28 text-center">
             <div className="text-xs font-bold tracking-[0.2em] text-[#85DABE] uppercase mb-4">
@@ -352,7 +333,6 @@ export default function HomePage() {
 
             {/* Steps */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-0 relative">
-              {/* Connecting line — desktop only */}
               <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
               {[
                 {
@@ -375,7 +355,6 @@ export default function HomePage() {
                 },
               ].map((item, idx) => (
                 <div key={idx} className="relative flex flex-col items-center">
-                  {/* Step Number Circle */}
                   <div
                     className="
                       relative z-10 h-14 w-14 rounded-full mb-6
@@ -424,9 +403,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════════════
-            SECTION 5 — CTA Banner (Fiverr-inspired)
-            ═══════════════════════════════════════════════ */}
+        {/* Banner */}
         <section className="max-w-7xl mx-auto px-5 md:px-8 py-8 md:py-12">
           <div
             className="
@@ -473,9 +450,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════════════
-            SECTION 6 — Footer (DevStudio-inspired)
-            ═══════════════════════════════════════════════ */}
+        {/* Footer */}
         <footer className="relative border-t border-white/[0.05] bg-[#030712] pt-16 md:pt-20 pb-10 overflow-hidden">
           <div className="max-w-7xl mx-auto px-5 md:px-8">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-10 mb-14 relative z-10">
@@ -591,7 +566,7 @@ export default function HomePage() {
                 Built on Solana • Powered by Anchor
               </div>
             </div>
-            {/* Large Decorative Watermark */}
+            {/* Brand Watermark */}
             <div
               className="
                 absolute bottom-[-40px] left-1/2 -translate-x-1/2
