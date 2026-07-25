@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AppWalletProvider } from "@/components/WalletProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { Inter, Space_Grotesk } from "next/font/google";
+import { RoleModal } from "@/components/home/RoleModal";
 
 import "./globals.css";
 
@@ -54,6 +55,7 @@ export default function RootLayout({
         className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased`}
       >
         <AppWalletProvider>
+          <RoleModal />
           <div className="min-h-screen flex flex-col">
             <Navbar />
             <main className="flex-1">{children}</main>
