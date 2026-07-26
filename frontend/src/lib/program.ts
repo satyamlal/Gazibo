@@ -58,7 +58,7 @@ export interface JobOnChain {
     bump: number;
 }
 
-// Read-only wallet for pages that don't require signing (e.g. browse gigs)
+// Read-only wallet for pages that don't require sign-in
 const READONLY_WALLET: AnchorWallet = {
     publicKey: PublicKey.default,
     signTransaction: async () => { throw new Error("Read-only"); },

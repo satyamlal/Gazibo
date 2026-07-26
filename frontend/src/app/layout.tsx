@@ -1,25 +1,15 @@
 import type { Metadata } from "next";
 import { AppWalletProvider } from "@/components/WalletProvider";
 import { Navbar } from "@/components/layout/Navbar";
-import { Inter, Space_Grotesk } from "next/font/google";
 import { RoleModal } from "@/components/home/RoleModal";
-
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
-  display: "swap",
-});
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Gazibo — Trustless Freelance Escrow on Solana",
+  title: "Gazibo - A Trustless Freelance Escrow on Solana",
   description:
     "The decentralized workspace protocol for elite engineering talent. Zero platform fees, instant smart-contract escrow, on-chain reputation. Built on Solana.",
   keywords: [
@@ -41,19 +31,37 @@ export const metadata: Metadata = {
     "web3 freelancers",
     "solana freelancers",
     "solana based freelancers",
+    "Zero platform fees",
+    "instant smart-contract escrow",
+    "on-chain reputation",
+    "Built on Solana.",
   ],
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <body
-        className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased`}
-      >
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var t = localStorage.getItem('gazibo_theme');
+                  if (t === 'light') {
+                    document.documentElement.classList.add('light');
+                  } else {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch(e) {
+                  document.documentElement.classList.add('dark');
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
         <AppWalletProvider>
           <RoleModal />
           <div className="min-h-screen flex flex-col">
