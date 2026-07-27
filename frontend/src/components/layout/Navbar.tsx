@@ -18,10 +18,10 @@ const CLIENT_SEED = Buffer.from("client_profile");
 const FREELANCER_SEED = Buffer.from("freelancer_profile");
 const PROGRAM_ID = new PublicKey(IDL.address);
 
-// Only public pages
 const NAV_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/jobs", label: "Browse Jobs" },
+  { href: "/jobs", label: "Active Listings" },
+  {href: "/freelancers", label: "Find Freelancers"}
 ] as const;
 
 export function Navbar() {
