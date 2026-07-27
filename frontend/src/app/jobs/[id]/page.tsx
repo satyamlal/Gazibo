@@ -43,6 +43,7 @@ export default function JobDetailPage() {
   const [released, setReleased] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelled, setCancelled] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const loadJob = useCallback(async () => {
     setError("");
@@ -71,17 +72,17 @@ export default function JobDetailPage() {
 
   // DELIVER — only the assigned freelancer can call this
   const handleDeliver = async () => {
-    const aw = getAnchorWallet();
-    if (!aw || !job) return;
+    const anchorWallet = getAnchorWallet();
+    if (!anchorWallet || !job) return;
     setDelivering(true);
     setError("");
     try {
-      const program = buildProgram(connection, aw);
+      const program = buildProgram(connection, anchorWallet);
       const jobPubkey = new PublicKey(jobAddress);
       await program.methods.deliverJob()
-        .accounts({ freelancer: aw.publicKey, jobAccount: jobPubkey })
+        .accounts({ freelancer: anchorWallet.publicKey, jobAccount: jobPubkey })
         .rpc();
-      setDelivered(true); // permanent — never re-enable
+      setDelivered(true);
       await loadJob();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Delivery failed.");
@@ -90,22 +91,20 @@ export default function JobDetailPage() {
   };
 
   // RELEASE PAYMENT — client only, after delivery
-  // NOTE: after success, JobAccount PDA is CLOSED on-chain (close = client).
-  // The account no longer exists — `released` flag prevents any re-call.
   const handleRelease = async () => {
-    const aw = getAnchorWallet();
-    if (!aw || !job || releasing || released) return;
+    const anchorWallet = getAnchorWallet();
+    if (!anchorWallet || !job || releasing || released) return;
     setReleasing(true);
     setError("");
     try {
-      const program = buildProgram(connection, aw);
+      const program = buildProgram(connection, anchorWallet);
       const jobPubkey = new PublicKey(jobAddress);
       const freelancerPubkey = job.freelancer as PublicKey;
 
       await program.methods.releasePayment()
         .accounts({
           jobAccount: jobPubkey,
-          client: aw.publicKey,
+          client: anchorWallet.publicKey,
           freelancer: freelancerPubkey,
         })
         .rpc();
@@ -119,24 +118,23 @@ export default function JobDetailPage() {
 
   // CANCEL — client only, only when status is Open
   const handleCancel = async () => {
-    const aw = getAnchorWallet();
-    if (!aw || !job || cancelling || cancelled) return;
-    if (!confirm("Cancel this job? Your escrowed SOL will be returned.")) return;
+    const anchorWallet = getAnchorWallet();
+    if (!anchorWallet || !job || cancelling || cancelled) return;
     setCancelling(true);
     setError("");
     try {
-      const program = buildProgram(connection, aw);
+      const program = buildProgram(connection, anchorWallet);
       const jobPubkey = new PublicKey(jobAddress);
       await program.methods.cancelJob()
-        .accounts({ client: aw.publicKey, jobAccount: jobPubkey })
+        .accounts({ client: anchorWallet.publicKey, jobAccount: jobPubkey })
         .rpc();
-      setCancelled(true); // permanent
-      router.push("/account/client");
+      setCancelled(true);
+      setShowCancelConfirm(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Cancel failed.");
       setCancelling(false);
     }
-  };
+};
 
   if (loading) {
     return (
@@ -252,14 +250,61 @@ export default function JobDetailPage() {
 
             {/* CLIENT ACTIONS */}
             {isClient && sk === "open" && !cancelled && (
-              <button
-                onClick={() => void handleCancel()}
-                disabled={cancelling}
-                className="w-full py-3.5 rounded-xl border border-red-500/30 text-red-400 text-sm font-semibold hover:bg-red-500/10 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-              >
-                {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                {cancelling ? "Cancelling…" : "Cancel Job & Reclaim SOL"}
-              </button>
+              <>
+                {showCancelConfirm ? (
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/[0.06] p-5 space-y-4">
+                    <p className="text-sm font-semibold text-white">
+                      Are you sure you want to cancel?
+                    </p>
+                    <p className="text-xs text-zinc-400">
+                      Your {(job.amount.toNumber() / LAMPORTS_PER_SOL).toFixed(3)} SOL
+                      will be returned to your wallet immediately. This cannot be undone.
+                    </p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => void handleCancel()}
+                        disabled={cancelling}
+                        className="flex-1 py-2.5 rounded-xl bg-red-500/80 text-white text-sm font-semibold hover:bg-red-500 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                      >
+                        {cancelling ? (
+                          <><Loader2 className="h-4 w-4 animate-spin" /> Cancelling…</>
+                        ) : (
+                          "Yes, cancel & reclaim SOL"
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setShowCancelConfirm(false)}
+                        className="flex-1 py-2.5 rounded-xl border border-white/[0.1] text-white text-sm font-semibold hover:bg-white/[0.06] transition-colors"
+                      >
+                        Keep job
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowCancelConfirm(true)}
+                    className="w-full py-3.5 rounded-xl border border-red-500/30 text-red-400 text-sm font-semibold hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Cancel Job &amp; Reclaim SOL
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* Cancellation success */}
+            {cancelled && (
+              <div className="rounded-xl border border-[#85DABE]/20 bg-[#85DABE]/[0.06] p-5 text-center">
+                <CheckCircle2 className="h-6 w-6 text-[#85DABE] mx-auto mb-2" />
+                <p className="text-white font-bold mb-1">Job Cancelled</p>
+                <p className="text-zinc-400 text-sm mb-1">
+                  {(job.amount.toNumber() / LAMPORTS_PER_SOL).toFixed(3)} SOL returned to your wallet.
+                </p>
+                <p className="text-zinc-600 text-xs">Check your Phantom balance — it updates immediately.</p>
+                <Link href="/account/client" className="inline-block mt-4 text-[#85DABE] text-sm hover:underline">
+                  Back to Dashboard →
+                </Link>
+              </div>
             )}
 
             {isClient && sk === "delivered" && (

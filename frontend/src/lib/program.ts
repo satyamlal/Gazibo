@@ -137,16 +137,14 @@ export function freelancerProfilePda(walletPubkey: PublicKey): PublicKey {
     )[0];
 }
 
-export function gigAccountPda(freelancerPubkey: PublicKey, gigId: bigint): PublicKey {
-    const idBytes = Buffer.alloc(8);
-    idBytes.writeBigUInt64LE(gigId);
+export function gigAccountPda(freelancerPubkey: PublicKey, gigId: BN): PublicKey {
+    const idBytes = gigId.toArrayLike(Buffer, "le", 8);
     return PublicKey.findProgramAddressSync(
         [GIG_SEED, freelancerPubkey.toBuffer(), idBytes],
         PROGRAM_ID,
     )[0];
 }
 
-// Display utilities used across pages
 export function shortAddress(pubkey: PublicKey): string {
     const s = pubkey.toBase58();
     return `${s.slice(0, 4)}…${s.slice(-4)}`;

@@ -108,8 +108,7 @@ export default function NewGigPage() {
         const gigId = new BN(profile.gigCounter.toString());
 
         // Derive the gig PDA
-        const idBytes = Buffer.alloc(8);
-        idBytes.writeBigUInt64LE(BigInt(gigId.toString()));
+        const idBytes = gigId.toArrayLike(Buffer, "le", 8);
         const [gigPda] = PublicKey.findProgramAddressSync(
             [GIG_SEED, wallet.publicKey.toBuffer(), idBytes],
             PROGRAM_ID

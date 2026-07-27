@@ -48,8 +48,7 @@ export default function PostJobPage() {
             const jobId = new BN(profile.jobCounter.toString());
 
         // Derive job PDA: [JOB_SEED, client, job_id_bytes]
-            const idBytes = Buffer.alloc(8);
-            idBytes.writeBigUInt64LE(BigInt(jobId.toString()));
+            const idBytes = jobId.toArrayLike(Buffer, "le", 8);
             const [jobPda] = PublicKey.findProgramAddressSync(
                 [JOB_SEED, wallet.publicKey.toBuffer(), idBytes],
                 PROGRAM_ID

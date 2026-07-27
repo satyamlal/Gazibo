@@ -124,14 +124,17 @@ useEffect(() => { void load(); }, [load]);
             {[
                 { icon: Clock, label: "Active", value: String(activeCount), color: "text-[#174BD4]" },
                 { icon: CheckCircle2, label: "Completed", value: String(completedCount), color: "text-[#85DABE]" },
-                { icon: DollarSign, label: "Total Spent", value: `${totalSpent} SOL`, color: "text-amber-400" },
+                { icon: DollarSign, label: "Total Escrowed", value: `${totalSpent} SOL`, color: "text-amber-400", note: "Refunds go back to wallet." },
             ].map((stat) => (
                 <div key={stat.label} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
-                <div className={`flex items-center gap-2 mb-3 ${stat.color}`}>
-                    <stat.icon className="h-4 w-4" />
-                    <span className="text-xs font-semibold uppercase tracking-wider">{stat.label}</span>
-                </div>
-                <div className="text-2xl font-bold text-white">{stat.value}</div>
+                    <div className={`flex items-center gap-2 mb-3 ${stat.color}`}>
+                        <stat.icon className="h-4 w-4" />
+                        <span className="text-xs font-semibold uppercase tracking-wider">{stat.label}</span>
+                    </div>
+                    <div className="text-2xl font-bold text-white">{stat.value}</div>
+                    {"note" in stat && stat.note && (
+                        <p className="text-[10px] text-zinc-600 mt-1">{stat.note as string}</p>
+                    )}
                 </div>
             ))}
             </div>

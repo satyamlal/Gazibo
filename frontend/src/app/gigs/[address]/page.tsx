@@ -15,6 +15,7 @@ import {
 import { GigPlanTabs } from "@/components/gigs/GigPlanTabs";
 import type { PlanTier, GigPlan } from "@/components/gigs/GigPlanTabs";
 import { ArrowLeft, Star, Loader2, CheckCircle2, MessageCircle } from "lucide-react";
+import { GiIgloo } from "react-icons/gi";
 
 // Temporary metadata for gigs that have no IPFS URI yet.
 // In a future update, this reads from the IPFS CID stored in GigAccount.
@@ -114,8 +115,7 @@ function buildFallbackPlans(gig: GigOnChain): Record<PlanTier, GigPlan> {
         }
 
         const jobId = new BN(jobCounter);
-        const idBytes = Buffer.alloc(8);
-        idBytes.writeBigUInt64LE(BigInt(jobId.toString()));
+        const idBytes = jobId.toArrayLike(Buffer, "le", 8);
         const [jobPda] = PublicKey.findProgramAddressSync(
             [JOB_SEED, wallet.publicKey.toBuffer(), idBytes],
             PROGRAM_ID

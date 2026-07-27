@@ -22,7 +22,7 @@ interface GaziboProgram {
   };
 }
 
-type AsyncStep = "idle" | "checking" | "show" | "loading" | "done";
+type AsyncStep = "idle" | "checking" | "show" | "loading";
 
 export function RoleModal() {
   const { connection } = useConnection();
@@ -35,10 +35,6 @@ export function RoleModal() {
 
     const address = wallet.publicKey.toBase58();
 
-    // Fast path: localStorage already cached
-    if (localStorage.getItem(roleSetKey(address)) === "true") return;
-
-    // Slow path: all setState calls live inside the async function (after awaits)
     const runCheck = async () => {
       const [clientPda] = PublicKey.findProgramAddressSync(
         [CLIENT_PROFILE_SEED, wallet.publicKey!.toBuffer()],
@@ -49,23 +45,31 @@ export function RoleModal() {
         PROGRAM_ID
       );
 
-      // setAsyncStep is called AFTER the first await — satisfies the lint rule
       const [clientInfo, freelancerInfo] = await Promise.all([
         connection.getAccountInfo(clientPda),
         connection.getAccountInfo(freelancerPda),
       ]);
 
       if (clientInfo !== null || freelancerInfo !== null) {
+        // Cache PDA
         localStorage.setItem(roleSetKey(address), "true");
-        setAsyncStep("idle"); // Already has a role
+        setAsyncStep("idle");
       } else {
-        setAsyncStep("show"); // No role — show the picker
+        // No PDA — clear stale cache and show the picker
+        localStorage.removeItem(roleSetKey(address));
+        setAsyncStep("show");
       }
     };
 
-    // Show checking indicator then run
-    setAsyncStep("checking");
-    runCheck().catch(() => setAsyncStep("idle"));
+    const cached = localStorage.getItem(roleSetKey(address)) === "true";
+    if (!cached) {
+      setAsyncStep("checking");
+    }
+
+    runCheck().catch(() => {
+      // On RPC error, don't block the user
+      setAsyncStep("idle");
+    });
   }, [wallet.connected, wallet.publicKey, connection]);
 
   const getProgram = (): GaziboProgram => {
@@ -77,10 +81,7 @@ export function RoleModal() {
     const provider = new AnchorProvider(connection, anchorWallet, {
       commitment: "confirmed",
     });
-    return new Program(
-      IDL as unknown as Idl,
-      provider
-    ) as unknown as GaziboProgram;
+    return new Program(IDL as unknown as Idl, provider) as unknown as GaziboProgram;
   };
 
   const choose = async (role: "client" | "freelancer") => {
@@ -104,7 +105,6 @@ export function RoleModal() {
     }
   };
 
-  // visibility: modal only shows during "show" or "loading" steps
   if (asyncStep === "idle" || asyncStep === "checking") return null;
 
   return (
@@ -123,7 +123,7 @@ export function RoleModal() {
             How do you want to use this platform?
           </h2>
           <p className="text-zinc-400 text-sm max-w-sm mx-auto">
-            This creates your on-chain profile. You can switch roles anytime
+            This creates your on-chain profile. You can add both roles anytime
             from Account Settings.
           </p>
         </div>
