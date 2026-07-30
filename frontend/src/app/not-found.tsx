@@ -76,7 +76,7 @@ export default function NotFound() {
             href="/jobs"
             className="w-full sm:w-auto px-8 py-3.5 rounded-full border border-white/[0.1] bg-white/3 text-white font-semibold text-[15px] flex items-center justify-center gap-2 hover:bg-white/[0.07] hover:border-white/[0.18] transition-all duration-300"
           >
-            Browse Jobs
+            Active Listings
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

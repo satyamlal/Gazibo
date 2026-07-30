@@ -15,7 +15,7 @@ const WalletMultiButton = dynamic(
 );
 
 const CLIENT_SEED = Buffer.from("client_profile");
-const FREELANCER_SEED = Buffer.from("freelancer_profile");
+const FREELANCER_PROFILE_SEED = Buffer.from("freelancer_profile");
 const PROGRAM_ID = new PublicKey(IDL.address);
 
 const NAV_LINKS = [
@@ -47,7 +47,7 @@ export function Navbar() {
     }
     const detect = async () => {
       const [clientPda] = PublicKey.findProgramAddressSync([CLIENT_SEED, publicKey.toBuffer()], PROGRAM_ID);
-      const [freelancerPda] = PublicKey.findProgramAddressSync([FREELANCER_SEED, publicKey.toBuffer()], PROGRAM_ID);
+      const [freelancerPda] = PublicKey.findProgramAddressSync([FREELANCER_PROFILE_SEED, publicKey.toBuffer()], PROGRAM_ID);
       const [ci, fi] = await Promise.all([
         connection.getAccountInfo(clientPda),
         connection.getAccountInfo(freelancerPda),
@@ -108,7 +108,7 @@ export function Navbar() {
                 href={dashboardHref()}
                 className={`hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-250 ${
                   pathname.startsWith("/account")
-                    ? "bg-white/[0.08] text-white border border-white/[0.12]"
+                    ? "bg-[#174BD4] text-white shadow-[0_0_16px_rgba(23,75,212,0.4)]"
                     : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
                 }`}
               >

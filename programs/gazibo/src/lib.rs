@@ -9,7 +9,7 @@ pub use constants::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("E5fzH1DgUovmKF5GFxg5FrMj1ka89K9r9p83TL6N4xFC");
+declare_id!("vwrznGgC6bvKEjXcYv3JMEe5HXAUJaMHmNAPzVycjJL");
 
 #[program]
 pub mod gazibo {

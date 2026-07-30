@@ -8,7 +8,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-gazibo = "E5fzH1DgUovmKF5GFxg5FrMj1ka89K9r9p83TL6N4xFC"
+gazibo = "vwrznGgC6bvKEjXcYv3JMEe5HXAUJaMHmNAPzVycjJL"
 
 [registry]
 url = "https://api.apr.dev/"

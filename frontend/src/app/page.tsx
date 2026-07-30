@@ -491,7 +491,7 @@ export default function HomePage() {
                       href="/jobs"
                       className="text-sm text-zinc-500 hover:text-white transition-colors duration-200"
                     >
-                      Browse Jobs
+                      Active Listings
                     </Link>
                   </li>
                   <li>

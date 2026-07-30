@@ -73,7 +73,7 @@ impl Default for JobStatus {
 // ─────────────────────────────────────────────────────────────
 
 #[account]
-#[derive(Debug)]
+#[derive(Debug, InitSpace)]
 pub struct FreelancerProfile {
     pub freelancer: Pubkey,
     pub gig_counter: u64,
@@ -85,7 +85,14 @@ pub struct FreelancerProfile {
 }
 
 impl FreelancerProfile {
-    pub const SPACE: usize = 8 + 32 + 8 + 8 + 8 + 4 + 4 + 1;
+    pub const SPACE: usize = 8 +   // discriminator
+        32 +  // freelancer
+        8 +   // gig_counter
+        8 +   // jobs_completed
+        8 +   // total_earned
+        8 +   // rating_sum
+        8 +   // rating_count
+        1; // bump
 }
 
 // ─────────────────────────────────────────────────────────────

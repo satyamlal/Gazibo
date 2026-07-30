@@ -30,7 +30,7 @@ interface ToastProps {
 
 function ToastItem({ toast, onDismiss }: ToastProps) {
     useEffect(() => {
-        const t = setTimeout(() => onDismiss(toast.id), 3000);
+        const t = setTimeout(() => onDismiss(toast.id), 7000);
         return () => clearTimeout(t);
     }, [toast.id, onDismiss]);
 

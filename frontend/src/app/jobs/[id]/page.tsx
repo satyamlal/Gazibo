@@ -7,6 +7,8 @@ import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { buildProgram, type JobOnChain } from "@/lib/program";
+import { ToastContainer } from "@/components/ui/Toast";
+import { useToast } from "@/hooks/useToast";
 import {
   ArrowLeft, Loader2, CheckCircle2, Clock,
   Truck, XCircle, Lock, ShieldCheck, AlertTriangle,
@@ -16,41 +18,42 @@ function statusKey(s: Record<string, Record<string, never>>) {
   return Object.keys(s)[0] ?? "open";
 }
 
-const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; cls: string; bg: string }> = {
-  open: { label: "Open — waiting for a freelancer", icon: Clock, cls: "text-[#85DABE] border-[#85DABE]/20", bg: "bg-[#85DABE]/10" },
-  inProgress: { label: "In Progress", icon: Truck, cls: "text-[#174BD4] border-[#174BD4]/20", bg: "bg-[#174BD4]/10" },
-  delivered: { label: "Delivered — review needed", icon: AlertTriangle, cls: "text-amber-400 border-amber-500/20", bg: "bg-amber-500/10" },
-  completed: { label: "Completed", icon: CheckCircle2, cls: "text-zinc-400 border-zinc-500/20", bg: "bg-zinc-500/10" },
-  cancelled: { label: "Cancelled", icon: XCircle, cls: "text-red-400 border-red-500/20", bg: "bg-red-500/10" },
+const STATUS_CONFIG: Record<string, {
+  label: string; icon: React.ElementType; cls: string; bg: string;
+}> = {
+  open:       { label: "Open — waiting for a freelancer", icon: Clock,         cls: "text-[#85DABE] border-[#85DABE]/20",  bg: "bg-[#85DABE]/10"  },
+  inProgress: { label: "In Progress",                     icon: Truck,         cls: "text-[#174BD4] border-[#174BD4]/20",  bg: "bg-[#174BD4]/10"  },
+  delivered:  { label: "Delivered — review needed",       icon: AlertTriangle, cls: "text-amber-400 border-amber-500/20",  bg: "bg-amber-500/10"  },
+  completed:  { label: "Completed",                       icon: CheckCircle2,  cls: "text-zinc-400 border-zinc-500/20",    bg: "bg-zinc-500/10"   },
+  cancelled:  { label: "Cancelled",                       icon: XCircle,       cls: "text-red-400 border-red-500/20",      bg: "bg-red-500/10"    },
 };
 
 export default function JobDetailPage() {
-  const params = useParams();
-  const router = useRouter();
+  const params    = useParams();
+  const router    = useRouter();
   const { connection } = useConnection();
-  const wallet = useWallet();
+  const wallet    = useWallet();
+  const { toasts, addToast, dismiss } = useToast();
 
   const jobAddress = params.id as string;
 
-  const [job, setJob] = useState<JobOnChain | null>(null);
+  const [job, setJob]         = useState<JobOnChain | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError]     = useState("");
 
-  // Action states — each action has its own permanent-disable flag
-  const [delivering, setDelivering] = useState(false);
-  const [delivered, setDelivered] = useState(false);
-  const [releasing, setReleasing] = useState(false);
-  const [released, setReleased] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
-  const [cancelled, setCancelled] = useState(false);
+  const [delivering, setDelivering]           = useState(false);
+  const [delivered,  setDelivered]            = useState(false);
+  const [releasing,  setReleasing]            = useState(false);
+  const [released,   setReleased]             = useState(false);
+  const [cancelling, setCancelling]           = useState(false);
+  const [cancelled,  setCancelled]            = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const loadJob = useCallback(async () => {
     setError("");
     try {
       const program = buildProgram(connection);
-      const jobPubkey = new PublicKey(jobAddress);
-      const data = await program.account.jobAccount.fetch(jobPubkey);
+      const data    = await program.account.jobAccount.fetch(new PublicKey(jobAddress));
       setJob(data);
     } catch {
       setError("Job not found on this validator.");
@@ -64,25 +67,24 @@ export default function JobDetailPage() {
   const getAnchorWallet = (): AnchorWallet | null => {
     if (!wallet.publicKey || !wallet.signTransaction || !wallet.signAllTransactions) return null;
     return {
-      publicKey: wallet.publicKey,
-      signTransaction: wallet.signTransaction,
+      publicKey:           wallet.publicKey,
+      signTransaction:     wallet.signTransaction,
       signAllTransactions: wallet.signAllTransactions,
     };
   };
 
-  // DELIVER — only the assigned freelancer can call this
   const handleDeliver = async () => {
-    const anchorWallet = getAnchorWallet();
-    if (!anchorWallet || !job) return;
+    const aw = getAnchorWallet();
+    if (!aw || !job) return;
     setDelivering(true);
     setError("");
     try {
-      const program = buildProgram(connection, anchorWallet);
-      const jobPubkey = new PublicKey(jobAddress);
+      const program = buildProgram(connection, aw);
       await program.methods.deliverJob()
-        .accounts({ freelancer: anchorWallet.publicKey, jobAccount: jobPubkey })
+        .accounts({ freelancer: aw.publicKey, jobAccount: new PublicKey(jobAddress) })
         .rpc();
       setDelivered(true);
+      addToast("Delivery submitted! Waiting for client approval.", "success");
       await loadJob();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Delivery failed.");
@@ -90,51 +92,52 @@ export default function JobDetailPage() {
     }
   };
 
-  // RELEASE PAYMENT — client only, after delivery
   const handleRelease = async () => {
-    const anchorWallet = getAnchorWallet();
-    if (!anchorWallet || !job || releasing || released) return;
+    const aw = getAnchorWallet();
+    if (!aw || !job || releasing || released) return;
     setReleasing(true);
     setError("");
     try {
-      const program = buildProgram(connection, anchorWallet);
-      const jobPubkey = new PublicKey(jobAddress);
-      const freelancerPubkey = job.freelancer as PublicKey;
-
+      const program = buildProgram(connection, aw);
       await program.methods.releasePayment()
         .accounts({
-          jobAccount: jobPubkey,
-          client: anchorWallet.publicKey,
-          freelancer: freelancerPubkey,
+          jobAccount: new PublicKey(jobAddress),
+          client:     aw.publicKey,
+          freelancer: job.freelancer as PublicKey,
         })
         .rpc();
-
-      setReleased(true); // permanent — JobAccount no longer exists after this
+      setReleased(true);
+      addToast(
+        `Payment of ${(job.amount.toNumber() / LAMPORTS_PER_SOL).toFixed(3)} SOL released!`,
+        "success"
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Payment release failed.");
-      setReleasing(false); // re-enable only on failure
+      setReleasing(false);
     }
   };
 
-  // CANCEL — client only, only when status is Open
   const handleCancel = async () => {
-    const anchorWallet = getAnchorWallet();
-    if (!anchorWallet || !job || cancelling || cancelled) return;
+    const aw = getAnchorWallet();
+    if (!aw || !job || cancelling || cancelled) return;
     setCancelling(true);
     setError("");
     try {
-      const program = buildProgram(connection, anchorWallet);
-      const jobPubkey = new PublicKey(jobAddress);
+      const program = buildProgram(connection, aw);
       await program.methods.cancelJob()
-        .accounts({ client: anchorWallet.publicKey, jobAccount: jobPubkey })
+        .accounts({ client: aw.publicKey, jobAccount: new PublicKey(jobAddress) })
         .rpc();
       setCancelled(true);
       setShowCancelConfirm(false);
+      addToast(
+        `Job cancelled. ${(job.amount.toNumber() / LAMPORTS_PER_SOL).toFixed(3)} SOL returned to your wallet.`,
+        "info"
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Cancel failed.");
       setCancelling(false);
     }
-};
+  };
 
   if (loading) {
     return (
@@ -157,13 +160,15 @@ export default function JobDetailPage() {
 
   if (!job) return null;
 
-  const sk = statusKey(job.status);
+  const sk  = statusKey(job.status);
   const cfg = STATUS_CONFIG[sk] ?? STATUS_CONFIG.open;
   const StatusIcon = cfg.icon;
 
-  const isClient = wallet.publicKey?.equals(job.client) ?? false;
-  const isFreelancer = job.freelancer && wallet.publicKey?.equals(job.freelancer as PublicKey) ? true : false;
-  const freelancerPubkey = job.freelancer as PublicKey | null;
+  const isClient     = wallet.publicKey?.equals(job.client) ?? false;
+  const freelancerPk = job.freelancer as PublicKey | null;
+  const isFreelancer = freelancerPk && wallet.publicKey
+    ? freelancerPk.equals(wallet.publicKey)
+    : false;
 
   return (
     <div className="min-h-screen bg-[#030712]">
@@ -192,10 +197,8 @@ export default function JobDetailPage() {
             <StatusIcon className="h-3.5 w-3.5" />
             {cfg.label}
           </div>
-
           <h1 className="text-2xl font-extrabold text-white mb-3">{job.title}</h1>
           <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">{job.description}</p>
-
           <div className="mt-6 pt-5 border-t border-white/[0.06] grid grid-cols-2 gap-4">
             <div>
               <p className="text-[11px] text-zinc-600 uppercase tracking-wider mb-1">Escrow amount</p>
@@ -219,18 +222,18 @@ export default function JobDetailPage() {
               {isClient && <span className="ml-2 text-[10px] text-[#85DABE] font-bold">(You)</span>}
             </p>
           </div>
-          {freelancerPubkey && (
+          {freelancerPk && (
             <div>
               <p className="text-[11px] text-zinc-600 uppercase tracking-wider mb-1">Freelancer</p>
               <p className="text-sm font-mono text-zinc-300 break-all">
-                {freelancerPubkey.toBase58()}
+                {freelancerPk.toBase58()}
                 {isFreelancer && <span className="ml-2 text-[10px] text-[#85DABE] font-bold">(You)</span>}
               </p>
             </div>
           )}
         </div>
 
-        {/* Payment released success */}
+        {/* Payment released */}
         {released && (
           <div className="rounded-2xl border border-[#85DABE]/20 bg-[#85DABE]/[0.06] p-6 text-center mb-4">
             <CheckCircle2 className="h-8 w-8 text-[#85DABE] mx-auto mb-3" />
@@ -244,21 +247,19 @@ export default function JobDetailPage() {
           </div>
         )}
 
-        {/* Actions — only shown if not already acted */}
+        {/* Actions */}
         {!released && (
           <div className="space-y-3">
 
-            {/* CLIENT ACTIONS */}
+            {/* CLIENT: Cancel */}
             {isClient && sk === "open" && !cancelled && (
               <>
                 {showCancelConfirm ? (
                   <div className="rounded-xl border border-red-500/20 bg-red-500/[0.06] p-5 space-y-4">
-                    <p className="text-sm font-semibold text-white">
-                      Are you sure you want to cancel?
-                    </p>
+                    <p className="text-sm font-semibold text-white">Are you sure you want to cancel?</p>
                     <p className="text-xs text-zinc-400">
-                      Your {(job.amount.toNumber() / LAMPORTS_PER_SOL).toFixed(3)} SOL
-                      will be returned to your wallet immediately. This cannot be undone.
+                      Your {(job.amount.toNumber() / LAMPORTS_PER_SOL).toFixed(3)} SOL will be
+                      returned to your wallet immediately.
                     </p>
                     <div className="flex gap-3">
                       <button
@@ -266,11 +267,9 @@ export default function JobDetailPage() {
                         disabled={cancelling}
                         className="flex-1 py-2.5 rounded-xl bg-red-500/80 text-white text-sm font-semibold hover:bg-red-500 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                       >
-                        {cancelling ? (
-                          <><Loader2 className="h-4 w-4 animate-spin" /> Cancelling…</>
-                        ) : (
-                          "Yes, cancel & reclaim SOL"
-                        )}
+                        {cancelling
+                          ? <><Loader2 className="h-4 w-4 animate-spin" /> Cancelling…</>
+                          : "Yes, cancel & reclaim SOL"}
                       </button>
                       <button
                         onClick={() => setShowCancelConfirm(false)}
@@ -285,65 +284,60 @@ export default function JobDetailPage() {
                     onClick={() => setShowCancelConfirm(true)}
                     className="w-full py-3.5 rounded-xl border border-red-500/30 text-red-400 text-sm font-semibold hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2"
                   >
-                    <XCircle className="h-4 w-4" />
-                    Cancel Job &amp; Reclaim SOL
+                    <XCircle className="h-4 w-4" /> Cancel Job &amp; Reclaim SOL
                   </button>
                 )}
               </>
             )}
 
-            {/* Cancellation success */}
+            {/* Cancelled success */}
             {cancelled && (
               <div className="rounded-xl border border-[#85DABE]/20 bg-[#85DABE]/[0.06] p-5 text-center">
                 <CheckCircle2 className="h-6 w-6 text-[#85DABE] mx-auto mb-2" />
                 <p className="text-white font-bold mb-1">Job Cancelled</p>
-                <p className="text-zinc-400 text-sm mb-1">
+                <p className="text-zinc-400 text-sm">
                   {(job.amount.toNumber() / LAMPORTS_PER_SOL).toFixed(3)} SOL returned to your wallet.
                 </p>
-                <p className="text-zinc-600 text-xs">Check your Phantom balance — it updates immediately.</p>
-                <Link href="/account/client" className="inline-block mt-4 text-[#85DABE] text-sm hover:underline">
+                <Link href="/account/client" className="inline-block mt-3 text-[#85DABE] text-sm hover:underline">
                   Back to Dashboard →
                 </Link>
               </div>
             )}
 
+            {/* CLIENT: Release */}
             {isClient && sk === "delivered" && (
               <div className="space-y-3">
                 <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-4 text-xs text-amber-200/80">
                   <p className="font-semibold text-amber-300 mb-1">Review the delivered work</p>
-                  <p>The freelancer has submitted their work. If you&apos;re satisfied, release payment. Once released, the escrow account closes permanently — this cannot be undone.</p>
+                  <p>The freelancer has submitted their work. Release payment only when satisfied. This cannot be undone.</p>
                 </div>
                 <button
                   onClick={() => void handleRelease()}
                   disabled={releasing || released}
                   className="w-full py-4 rounded-xl bg-[#85DABE] text-[#030712] font-bold text-[15px] hover:bg-[#A8E8D0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                 >
-                  {releasing ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Releasing payment…</>
-                  ) : (
-                    <><ShieldCheck className="h-4 w-4" /> Release Payment</>
-                  )}
+                  {releasing
+                    ? <><Loader2 className="h-4 w-4 animate-spin" /> Releasing payment…</>
+                    : <><ShieldCheck className="h-4 w-4" /> Release Payment</>}
                 </button>
               </div>
             )}
 
-            {/* FREELANCER ACTIONS */}
+            {/* FREELANCER: Deliver */}
             {isFreelancer && sk === "inProgress" && !delivered && (
               <div className="space-y-3">
                 <div className="rounded-xl border border-[#174BD4]/15 bg-[#174BD4]/[0.04] p-4 text-xs text-zinc-400">
                   <p className="font-semibold text-white mb-1">Ready to deliver?</p>
-                  <p>Clicking &quot;Mark as Delivered&quot; notifies the client and changes the job status. The client then reviews and releases your payment.</p>
+                  <p>Clicking &quot;Mark as Delivered&quot; notifies the client. They then review and release your payment.</p>
                 </div>
                 <button
                   onClick={() => void handleDeliver()}
                   disabled={delivering}
                   className="w-full py-4 rounded-xl bg-[#174BD4] text-white font-bold text-[15px] hover:bg-[#174BD4]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                 >
-                  {delivering ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Submitting delivery…</>
-                  ) : (
-                    <><Truck className="h-4 w-4" /> Mark as Delivered</>
-                  )}
+                  {delivering
+                    ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting delivery…</>
+                    : <><Truck className="h-4 w-4" /> Mark as Delivered</>}
                 </button>
               </div>
             )}
@@ -355,7 +349,7 @@ export default function JobDetailPage() {
               </div>
             )}
 
-            {/* Escrow info for observers */}
+            {/* Observer */}
             {!isClient && !isFreelancer && (
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 flex items-start gap-3 text-xs text-zinc-500">
                 <Lock className="h-4 w-4 shrink-0 mt-0.5 text-zinc-600" />
@@ -365,6 +359,9 @@ export default function JobDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </div>
   );
 }

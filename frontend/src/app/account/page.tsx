@@ -9,7 +9,7 @@ import Link from "next/link";
 import IDL from "@/idl/gazibo.json";
 
 const CLIENT_SEED = Buffer.from("client_profile");
-const FREELANCER_SEED = Buffer.from("freelancer_profile");
+const FREELANCER_PROFILE_SEED = Buffer.from("freelancer_profile");
 const PROGRAM_ID = new PublicKey(IDL.address);
 
 export default function AccountPage() {
@@ -31,7 +31,7 @@ export default function AccountPage() {
         [CLIENT_SEED, publicKey.toBuffer()], PROGRAM_ID
       );
       const [freelancerPda] = PublicKey.findProgramAddressSync(
-        [FREELANCER_SEED, publicKey.toBuffer()], PROGRAM_ID
+        [FREELANCER_PROFILE_SEED, publicKey.toBuffer()], PROGRAM_ID
       );
 
       const [clientInfo, freelancerInfo] = await Promise.all([

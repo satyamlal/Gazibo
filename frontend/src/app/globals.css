@@ -319,3 +319,67 @@ body {
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-subtle);
 }
+
+/* ── Light Mode Override ────────────────────────────────────
+ * Applied when <html class="light"> is set by the theme toggle.
+ * These override the hardcoded dark hex values for key surfaces.
+ * ─────────────────────────────────────────────────────────── */
+html.light body {
+  background-color: #f0f4f8 !important;
+  color: #0f172a !important;
+}
+
+html.light .min-h-screen,
+html.light [class*="bg-\[#030712\]"],
+html.light [class*="bg-\[#0A0F1E\]"] {
+  background-color: #f0f4f8 !important;
+}
+
+html.light [class*="border-white\/"] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light [class*="bg-white\/\[0.02\]"],
+html.light [class*="bg-white\/\[0.03\]"],
+html.light [class*="bg-white\/\[0.04\]"] {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-zinc-400 {
+  color: #475569 !important;
+}
+
+html.light .text-zinc-500 {
+  color: #64748b !important;
+}
+
+html.light .text-zinc-600 {
+  color: #94a3b8 !important;
+}
+
+html.light .text-zinc-700 {
+  color: #94a3b8 !important;
+}
+
+html.light .text-zinc-300 {
+  color: #334155 !important;
+}
+
+html.light .text-zinc-200 {
+  color: #1e293b !important;
+}
+
+html.light header {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light .rounded-2xl,
+html.light .rounded-xl {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}

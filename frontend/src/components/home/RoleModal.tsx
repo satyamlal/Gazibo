@@ -91,9 +91,18 @@ export function RoleModal() {
     try {
       const program = getProgram();
       if (role === "client") {
-        await program.methods.initializeClient().rpc();
+          await program.methods.initializeClient().rpc();
       } else {
-        await program.methods.initializeFreelancer().rpc();
+          const [freelancerPda] = PublicKey.findProgramAddressSync(
+              [FREELANCER_PROFILE_SEED, wallet.publicKey.toBuffer()],
+              PROGRAM_ID
+          );
+          const info = await connection.getAccountInfo(freelancerPda);
+
+          console.log("Freelancer PDA:", freelancerPda.toBase58());
+          console.log("Account info BEFORE initialize:", info);
+          
+          await program.methods.initializeFreelancer().rpc();
       }
       localStorage.setItem(roleSetKey(wallet.publicKey.toBase58()), "true");
       setAsyncStep("idle");

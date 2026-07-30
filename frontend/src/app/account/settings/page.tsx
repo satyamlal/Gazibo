@@ -14,7 +14,7 @@ import IDL from "@/idl/gazibo.json";
 import { buildProgram } from "@/lib/program";
 
 const CLIENT_SEED = Buffer.from("client_profile");
-const FREELANCER_SEED = Buffer.from("freelancer_profile");
+const FREELANCER_PROFILE_SEED = Buffer.from("freelancer_profile");
 const PROGRAM_ID = new PublicKey(IDL.address);
 
 type ProfileState = "loading" | "none" | "client" | "freelancer" | "both";
@@ -54,7 +54,7 @@ export default function SettingsPage() {
     if (!publicKey) return;
     setProfileState("loading");
     const [clientPda] = PublicKey.findProgramAddressSync([CLIENT_SEED, publicKey.toBuffer()], PROGRAM_ID);
-    const [freelancerPda] = PublicKey.findProgramAddressSync([FREELANCER_SEED, publicKey.toBuffer()], PROGRAM_ID);
+    const [freelancerPda] = PublicKey.findProgramAddressSync([FREELANCER_PROFILE_SEED, publicKey.toBuffer()], PROGRAM_ID);
     const [ci, fi] = await Promise.all([
       connection.getAccountInfo(clientPda),
       connection.getAccountInfo(freelancerPda),

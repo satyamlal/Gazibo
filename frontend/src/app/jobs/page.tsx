@@ -83,24 +83,16 @@ export default function JobsPage() {
   useEffect(() => { void loadJobs(); }, [loadJobs]);
 
   const visibleJobs = useMemo(() => {
-    if (!jobs) return [];
+  if (!jobs) return [];
 
-    // Filter by status
-    let result =
-      filter === "all"
-        ? jobs
-        : jobs.filter((j) => statusKey(j.account.status) === "open");
+  // Status filter only — own jobs ARE shown (client can see them, just can't accept)
+  const result =
+    filter === "all"
+      ? jobs
+      : jobs.filter((j) => statusKey(j.account.status) === "open");
 
-    // Hide a connected client's own jobs from the browse view —
-    // they can't accept their own job (blocked on-chain too)
-    if (wallet.publicKey) {
-      result = result.filter(
-        (j) => !(j.account.client as PublicKey).equals(wallet.publicKey!)
-      );
-    }
-
-    return result;
-  }, [jobs, filter, wallet.publicKey]);
+  return result;
+}, [jobs, filter]);
 
   const handleAccept = async (job: JobListItem) => {
     if (!wallet.publicKey) return;
@@ -138,12 +130,12 @@ export default function JobsPage() {
               className="text-3xl md:text-4xl font-extrabold tracking-tight text-white"
               style={{ fontFamily: "var(--font-heading, var(--font-sans))" }}
             >
-              Browse Jobs
+              Open Gigs
             </h1>
             <p className="mt-2 text-zinc-400 text-sm">
-              Live escrow-backed jobs on your local validator.
+              Live escrow-backed jobs.
               {!wallet.connected && (
-                <span className="text-[#85DABE]"> No wallet needed to browse.</span>
+                <span className="text-[#85DABE]"> No wallet is needed to browse.</span>
               )}
             </p>
           </div>
@@ -224,8 +216,10 @@ export default function JobsPage() {
             {visibleJobs.map((job) => {
               const key = statusKey(job.account.status);
               const style = STATUS_STYLES[key] ?? STATUS_STYLES.open;
-              const canAccept =
-                key === "open" && !!wallet.publicKey;
+              const isOwnJob = wallet.publicKey 
+                ? (job.account.client as PublicKey).equals(wallet.publicKey) 
+                : false;
+              const canAccept = key === "open" && !!wallet.publicKey && !isOwnJob;
               const idStr = job.publicKey.toBase58();
 
               return (
@@ -266,22 +260,18 @@ export default function JobsPage() {
                           disabled={acceptingId === idStr}
                           className="px-4 py-2 rounded-full bg-[#174BD4] text-white text-xs font-semibold hover:bg-[#174BD4]/90 disabled:opacity-50 transition-colors whitespace-nowrap"
                         >
-                          {acceptingId === idStr ? "Accepting…" : "Accept Job"}
+                            {acceptingId === idStr ? "Accepting…" : "Accept Job"}
                         </button>
-                      ) : key === "open" ? (
-                        <Link
-                          href="/connect"
-                          className="px-4 py-2 rounded-full border border-white/[0.10] text-white text-xs font-semibold hover:bg-white/[0.06] transition-colors whitespace-nowrap"
-                        >
-                          Connect to Accept
-                        </Link>
-                      ) : (
-                        <Link
-                          href={`/jobs/${idStr}`}
-                          className="text-xs text-zinc-500 hover:text-white transition-colors whitespace-nowrap"
-                        >
-                          View →
-                        </Link>
+                        ) : key === "open" && isOwnJob ? (
+                          <span className="text-[11px] text-zinc-600 whitespace-nowrap">Your job</span>
+                        ) : key === "open" ? (
+                          <Link href="/connect" className="px-4 py-2 rounded-full border border-white/[0.10] text-white text-xs font-semibold hover:bg-white/[0.06] transition-colors whitespace-nowrap">
+                            Connect to Accept
+                          </Link>
+                        ) : (
+                          <Link href={`/jobs/${idStr}`} className="text-xs text-zinc-500 hover:text-white transition-colors whitespace-nowrap">
+                            View →
+                          </Link>
                       )}
                     </div>
                   </div>
