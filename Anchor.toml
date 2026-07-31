@@ -1,14 +1,13 @@
 [toolchain]
-package_manager = "yarn"
 anchor_version = "0.31.1"
+package_manager = "yarn"
 
 [features]
-seeds = false
 resolution = true
 skip-lint = false
 
 [programs.localnet]
-gazibo = "vwrznGgC6bvKEjXcYv3JMEe5HXAUJaMHmNAPzVycjJL"
+gazibo = "BJv8diwCkSg3d7nJeXYa8fV1xWeTLH8yVzcegpERFvDG"
 
 [registry]
 url = "https://api.apr.dev/"
@@ -19,5 +18,3 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "cargo test"
-
-[hooks]
