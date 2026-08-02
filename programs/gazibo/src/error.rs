@@ -74,4 +74,7 @@ pub enum GaziboError {
 
     #[msg("This gig is no longer active.")]
     GigNotActive,
+
+    #[msg("This wallet already has a different role registered on-chain. Each wallet is permanently bound to one role. Create a new wallet for this role.")]
+    RoleAlreadyChosen,
 }
