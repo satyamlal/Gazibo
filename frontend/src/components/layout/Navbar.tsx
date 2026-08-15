@@ -4,10 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
 import dynamic from "next/dynamic";
-import { Menu, X, Settings, Sun, Moon } from "lucide-react";
-import IDL from "@/idl/gazibo.json";
+import { Menu, X, Sun, Moon, Settings, LayoutDashboard } from "lucide-react";
 import { fetchProfileState } from "@/lib/rpc";
 import type { ProfileState } from "@/lib/rpc";
 
@@ -16,55 +14,46 @@ const WalletMultiButton = dynamic(
   { ssr: false }
 );
 
-const CLIENT_SEED             = Buffer.from("client_profile");
-const FREELANCER_PROFILE_SEED = Buffer.from("freelancer_profile");
-const PROGRAM_ID              = new PublicKey(IDL.address);
-
+// Nav links
 const FREELANCER_LINKS = [
-  { href: "/",                        label: "Home"                 },
-  { href: "/jobs",                    label: "Marketplace"          },
-  { href: "/account/freelancer/jobs", label: "My Jobs"              },
-  { href: "/account/freelancer",      label: "Freelancer Dashboard" },
+  { href: "/", label: "Home" },
+  { href: "/jobs", label: "Marketplace" },
+  { href: "/account/freelancer/jobs", label: "My Jobs" },
 ] as const;
 
 const CLIENT_LINKS = [
-  { href: "/",                     label: "Home"              },
-  { href: "/jobs",                  label: "Marketplace"       },
-  { href: "/freelancers",           label: "Find Freelancers"  },
-  { href: "/account/client/jobs",   label: "Jobs Created"      },
-  { href: "/account/client",        label: "Client Dashboard"  },
+  { href: "/", label: "Home" },
+  { href: "/jobs", label: "Marketplace" },
+  { href: "/freelancers", label: "Find Freelancers" },
+  { href: "/account/client/jobs", label: "Jobs Created" },
 ] as const;
 
 const PUBLIC_LINKS = [
-  { href: "/",            label: "Home"             },
-  { href: "/jobs",        label: "Marketplace"      },
+  { href: "/", label: "Home" },
+  { href: "/jobs", label: "Marketplace" },
   { href: "/freelancers", label: "Find Freelancers" },
 ] as const;
 
 type NavLink = { href: string; label: string };
-type Role    = "client" | "freelancer" | "both" | "none" | "checking";
 
 function isActive(href: string, pathname: string): boolean {
-  if (href === "/")                   return pathname === "/";
-  if (href === "/account/freelancer") return pathname === "/account/freelancer";
-  if (href === "/account/client")     return pathname === "/account/client";
+  if (href === "/") return pathname === "/";
   return pathname.startsWith(href);
 }
 
-function NavItem({ href, label, pathname, onClick }: NavLink & { pathname: string; onClick?: () => void }) {
+// NavItem
+function NavItem({
+  href, label, pathname, onClick,
+}: NavLink & { pathname: string; onClick?: () => void }) {
   const active = isActive(href, pathname);
   return (
     <Link
       href={href}
       onClick={onClick}
       className={`relative px-3.5 py-2 text-[13px] font-medium rounded-lg transition-all duration-200 ${
-        active
-          ? "g-text"
-          : "g-text-3 hover:g-text"
+        active ? "g-text" : "g-text-3 hover:g-text"
       }`}
-      style={{
-        backgroundColor: active ? "var(--ga-bg-surface)" : undefined,
-      }}
+      style={{ backgroundColor: active ? "var(--ga-bg-surface)" : undefined }}
     >
       {label}
       {active && (
@@ -76,11 +65,9 @@ function NavItem({ href, label, pathname, onClick }: NavLink & { pathname: strin
 
 function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
-
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
   }, []);
-
   const toggle = () => {
     const next = !isDark;
     setIsDark(next);
@@ -92,19 +79,43 @@ function ThemeToggle() {
       localStorage.setItem("gazibo_theme", "light");
     }
   };
-
   return (
     <button
       onClick={toggle}
-      className="h-9 w-9 flex items-center justify-center rounded-full border g-border transition-all duration-200 g-text-4 hover:g-text g-bg-surface"
+      className="h-9 w-9 flex items-center justify-center rounded-full border g-border g-bg-surface g-text-4 hover:g-text transition-all duration-200"
       aria-label="Toggle theme"
     >
       {isDark
-        ? <Sun  className="h-4 w-4 text-amber-400" />
-        : <Moon className="h-4 w-4 text-[#174BD4]" />
-      }
+        ? <Sun className="h-4 w-4 text-amber-400" />
+        : <Moon className="h-4 w-4 text-[#174BD4]" />}
     </button>
   );
+}
+
+function DashboardButton({ role }: { role: ProfileState | "checking" }) {
+  if (role === "client" || role === "both") {
+    return (
+      <Link
+        href="/account/client"
+        className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold bg-[#174BD4] text-white hover:bg-[#1A58F0] hover:shadow-[0_0_20px_rgba(23,75,212,0.35)] active:scale-[0.97] transition-all duration-200"
+      >
+        <LayoutDashboard className="h-3.5 w-3.5" />
+        Client Dashboard
+      </Link>
+    );
+  }
+  if (role === "freelancer") {
+    return (
+      <Link
+        href="/account/freelancer"
+        className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold bg-[#85DABE] text-[#030712] hover:bg-[#A8E8D0] hover:shadow-[0_0_20px_rgba(133,218,190,0.35)] active:scale-[0.97] transition-all duration-200"
+      >
+        <LayoutDashboard className="h-3.5 w-3.5" />
+          Freelancer Dashboard
+      </Link>
+    );
+  }
+  return null;
 }
 
 export function Navbar() {
@@ -112,9 +123,9 @@ export function Navbar() {
   const { connection } = useConnection();
   const { connected, publicKey } = useWallet();
 
-  const [scrolled, setScrolled] = useState(false);
+  const [scrolled,   setScrolled]   = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [role, setRole] = useState<Role>("checking");
+  const [role, setRole] = useState<ProfileState | "checking">("checking");
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
@@ -125,31 +136,10 @@ export function Navbar() {
   }, [handleScroll]);
 
   useEffect(() => {
-    if (!connected || !publicKey) {
-      setRole("checking"); return;
-    }
-    
-    const detect = async () => {
-      const [clientPda] = PublicKey.findProgramAddressSync(
-        [CLIENT_SEED, publicKey.toBuffer()], PROGRAM_ID
-      );
-      const [freelancerPda] = PublicKey.findProgramAddressSync(
-        [FREELANCER_PROFILE_SEED, publicKey.toBuffer()], PROGRAM_ID
-      );
-      const [ci, fi] = await Promise.all([
-        connection.getAccountInfo(clientPda),
-        connection.getAccountInfo(freelancerPda),
-      ]);
-      if (ci && fi) setRole("both");
-      else if (ci) setRole("client");
-      else if (fi) setRole("freelancer"); 
-      else setRole("none");
-    };
-    detect().catch(() => setRole("none"));
-
+    if (!connected || !publicKey) { setRole("checking"); return; }
     fetchProfileState(connection, publicKey)
       .then(setRole)
-      .catch(() => setRole("none")); // RPC failed — show public nav, don't crash
+      .catch(() => setRole("none"));
   }, [connected, publicKey, connection]);
 
   const navLinks: readonly NavLink[] = (() => {
@@ -165,7 +155,7 @@ export function Navbar() {
       className="sticky top-0 z-50 w-full transition-all duration-300"
       style={{
         backgroundColor: scrolled ? "var(--ga-bg-header)" : "transparent",
-        borderBottom: scrolled ? `1px solid var(--ga-border)` : "1px solid transparent",
+        borderBottom: scrolled ? "1px solid var(--ga-border)" : "1px solid transparent",
         backdropFilter: scrolled ? "blur(20px)" : "none",
         WebkitBackdropFilter: scrolled ? "blur(20px)" : "none",
       }}
@@ -180,8 +170,9 @@ export function Navbar() {
             </span>
             <span
               className="text-lg font-bold g-text"
-              style={{ fontFamily: "var(--font-heading, var(--font-sans))" }}>
-                Gazibo
+              style={{ fontFamily: "var(--font-heading, var(--font-sans))" }}
+            >
+              Gazibo
             </span>
           </Link>
 
@@ -197,37 +188,19 @@ export function Navbar() {
           </nav>
         </div>
 
-        {/* Right side */}
         <div className="flex items-center gap-2">
           <div className="hidden md:block">
             <ThemeToggle />
           </div>
 
-          {/* Settings — when connected */}
-          {connected && (
-            <Link
-              href="/account/settings"
-              className={`hidden md:flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 ${
-                pathname.startsWith("/account/settings")
-                  ? "g-bg-surface g-border-mid g-text"
-                  : "border-transparent g-text-4 hover:g-text g-bg-surface hover:border g-border"
-              }`}
-              style={{
-                border: pathname.startsWith("/account/settings")
-                  ? `1px solid var(--ga-border-mid)`
-                  : "1px solid transparent",
-                backgroundColor: "var(--ga-bg-surface)",
-              }}
-              aria-label="Account Settings">
-              <Settings className="h-4 w-4" />
-            </Link>
-          )}
+          {connected && <DashboardButton role={role} />}
 
-          {/* CTA for unconnected users */}
+          {/* Get Started — only for non-connected visitors */}
           {!connected && (
             <Link
               href="/connect"
-              className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold bg-[#174BD4] text-white hover:bg-[#1A58F0] hover:shadow-[0_0_20px_rgba(23,75,212,0.35)] active:scale-[0.97] transition-all duration-250">
+              className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold bg-[#174BD4] text-white hover:bg-[#1A58F0] hover:shadow-[0_0_20px_rgba(23,75,212,0.35)] active:scale-[0.97] transition-all duration-250"
+            >
               Get Started
             </Link>
           )}
@@ -263,22 +236,41 @@ export function Navbar() {
               />
             ))}
 
+            {/* Dashboard link in mobile */}
+            {connected && (role === "client" || role === "both") && (
+              <Link
+                href="/account/client"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-[#174BD4] hover:bg-[#174BD4]/[0.08] transition-all"
+              >
+                <LayoutDashboard className="h-4 w-4" /> Client Dashboard
+              </Link>
+            )}
+            {connected && role === "freelancer" && (
+              <Link
+                href="/account/freelancer"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-[#85DABE] hover:bg-[#85DABE]/[0.08] transition-all"
+              >
+                <LayoutDashboard className="h-4 w-4" /> Freelancer Dashboard
+              </Link>
+            )}
+
+            {/* Settings — kept in mobile only */}
             {connected && (
               <Link
                 href="/account/settings"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium g-text-3 hover:g-text transition-all"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium g-text-4 hover:g-text transition-all"
                 style={{
                   backgroundColor: pathname.startsWith("/account/settings")
-                    ? "var(--ga-bg-surface)"
-                    : undefined,
+                    ? "var(--ga-bg-surface)" : undefined,
                 }}
               >
                 <Settings className="h-4 w-4" /> Settings
               </Link>
             )}
 
-            {/* Theme toggle in mobile */}
             <div className="px-2 pt-2 pb-1">
               <ThemeToggle />
             </div>
