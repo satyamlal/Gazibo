@@ -99,6 +99,37 @@
               }
             ]
           }
+        },
+        {
+          "name": "client_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  108,
+                  105,
+                  101,
+                  110,
+                  116,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "client"
+              }
+            ]
+          }
         }
       ],
       "args": []
@@ -411,6 +442,36 @@
           }
         },
         {
+          "name": "role_registry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  108,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "client"
+              }
+            ]
+          }
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -461,6 +522,36 @@
                   105,
                   108,
                   101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "freelancer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "role_registry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  108,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
                 ]
               },
               {
@@ -527,6 +618,72 @@
         {
           "name": "freelancer",
           "writable": true
+        },
+        {
+          "name": "client_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  108,
+                  105,
+                  101,
+                  110,
+                  116,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "client"
+              }
+            ]
+          }
+        },
+        {
+          "name": "freelancer_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  114,
+                  101,
+                  101,
+                  108,
+                  97,
+                  110,
+                  99,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "freelancer"
+              }
+            ]
+          }
         }
       ],
       "args": []
@@ -583,6 +740,19 @@
         210,
         125,
         65
+      ]
+    },
+    {
+      "name": "RoleRegistry",
+      "discriminator": [
+        173,
+        129,
+        34,
+        250,
+        223,
+        92,
+        0,
+        232
       ]
     }
   ],
@@ -807,6 +977,16 @@
       "code": 6022,
       "name": "GigNotActive",
       "msg": "This gig is no longer active."
+    },
+    {
+      "code": 6023,
+      "name": "ClientProfileAlreadyCreated",
+      "msg": "This wallet already has a client profile role registered on-chain. Each wallet is permanently bound to one role. Create a new wallet for this role."
+    },
+    {
+      "code": 6024,
+      "name": "FreelancerProfileAlreadyCreated",
+      "msg": "This wallet already has a Freelancer profile role registered on-chain. Each wallet is permanently bound to one role. Create a new wallet for this role."
     }
   ],
   "types": [
@@ -1048,6 +1228,10 @@
           {
             "name": "refund_amount",
             "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -1129,8 +1313,58 @@
             "type": "pubkey"
           },
           {
-            "name": "amount",
+            "name": "gross_amount",
             "type": "u64"
+          },
+          {
+            "name": "fee_amount",
+            "type": "u64"
+          },
+          {
+            "name": "net_amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RoleRegistry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "role",
+            "type": {
+              "defined": {
+                "name": "UserRole"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserRole",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Client"
+          },
+          {
+            "name": "Freelancer"
           }
         ]
       }

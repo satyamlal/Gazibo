@@ -6,19 +6,24 @@ import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import type { Idl } from "@coral-xyz/anchor";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { Briefcase, Zap, Loader2 } from "lucide-react";
+import { Briefcase, Zap, Loader2, ShieldAlert } from "lucide-react";
 import IDL from "@/idl/gazibo.json";
-
-const CLIENT_PROFILE_SEED = Buffer.from("client_profile");
-const FREELANCER_PROFILE_SEED = Buffer.from("freelancer_profile");
-const PROGRAM_ID = new PublicKey(IDL.address);
+import {
+  fetchProfileState,
+  deriveProfilePDAs,
+  deriveRoleRegistryPDA,
+} from "@/lib/rpc";
 
 const roleSetKey = (address: string) => `role_set_${address}`;
 
+interface MethodBuilder {
+  accounts(a: Record<string, PublicKey>): { rpc(): Promise<string> };
+  rpc(): Promise<string>;
+}
 interface GaziboProgram {
   methods: {
-    initializeClient(): { rpc(): Promise<string> };
-    initializeFreelancer(): { rpc(): Promise<string> };
+    initializeClient(): MethodBuilder;
+    initializeFreelancer(): MethodBuilder;
   };
 }
 
@@ -26,61 +31,46 @@ type AsyncStep = "idle" | "checking" | "show" | "loading";
 
 export function RoleModal() {
   const { connection } = useConnection();
-  const wallet = useWallet();
+  const wallet         = useWallet();
   const [asyncStep, setAsyncStep] = useState<AsyncStep>("idle");
-  const [error, setError] = useState("");
+  const [error, setError]         = useState("");
 
   useEffect(() => {
     if (!wallet.connected || !wallet.publicKey) return;
 
     const address = wallet.publicKey.toBase58();
+    const cached  = localStorage.getItem(roleSetKey(address)) === "true";
 
-    const runCheck = async () => {
-      const [clientPda] = PublicKey.findProgramAddressSync(
-        [CLIENT_PROFILE_SEED, wallet.publicKey!.toBuffer()],
-        PROGRAM_ID
-      );
-      const [freelancerPda] = PublicKey.findProgramAddressSync(
-        [FREELANCER_PROFILE_SEED, wallet.publicKey!.toBuffer()],
-        PROGRAM_ID
-      );
-
-      const [clientInfo, freelancerInfo] = await Promise.all([
-        connection.getAccountInfo(clientPda),
-        connection.getAccountInfo(freelancerPda),
-      ]);
-
-      if (clientInfo !== null || freelancerInfo !== null) {
-        // Cache PDA
-        localStorage.setItem(roleSetKey(address), "true");
-        setAsyncStep("idle");
-      } else {
-        // No PDA — clear stale cache and show the picker
-        localStorage.removeItem(roleSetKey(address));
-        setAsyncStep("show");
-      }
-    };
-
-    const cached = localStorage.getItem(roleSetKey(address)) === "true";
-    if (!cached) {
-      setAsyncStep("checking");
+    if (cached) {
+      setAsyncStep("idle");
+      return;
     }
 
-    runCheck().catch(() => {
-      // On RPC error, don't block the user
-      setAsyncStep("idle");
-    });
+    setAsyncStep("checking");
+
+    // Single batched RPC call — checks role_registry + both profile PDAs
+    fetchProfileState(connection, wallet.publicKey)
+      .then((state) => {
+        if (state !== "none") {
+          localStorage.setItem(roleSetKey(address), "true");
+          setAsyncStep("idle");
+        } else {
+          setAsyncStep("show");
+        }
+      })
+      .catch(() => {
+        // RPC failed after retries — don't block the user
+        setAsyncStep("idle");
+      });
   }, [wallet.connected, wallet.publicKey, connection]);
 
   const getProgram = (): GaziboProgram => {
-    const anchorWallet: AnchorWallet = {
-      publicKey: wallet.publicKey!,
-      signTransaction: wallet.signTransaction!,
+    const aw: AnchorWallet = {
+      publicKey:           wallet.publicKey!,
+      signTransaction:     wallet.signTransaction!,
       signAllTransactions: wallet.signAllTransactions!,
     };
-    const provider = new AnchorProvider(connection, anchorWallet, {
-      commitment: "confirmed",
-    });
+    const provider = new AnchorProvider(connection, aw, { commitment: "confirmed" });
     return new Program(IDL as unknown as Idl, provider) as unknown as GaziboProgram;
   };
 
@@ -89,21 +79,30 @@ export function RoleModal() {
     setAsyncStep("loading");
     setError("");
     try {
-      const program = getProgram();
-      if (role === "client") {
-          await program.methods.initializeClient().rpc();
-      } else {
-          const [freelancerPda] = PublicKey.findProgramAddressSync(
-              [FREELANCER_PROFILE_SEED, wallet.publicKey.toBuffer()],
-              PROGRAM_ID
-          );
-          const info = await connection.getAccountInfo(freelancerPda);
+      const program       = getProgram();
+      const roleRegistry  = deriveRoleRegistryPDA(wallet.publicKey);
+      const { clientPda, freelancerPda } = deriveProfilePDAs(wallet.publicKey);
 
-          console.log("Freelancer PDA:", freelancerPda.toBase58());
-          console.log("Account info BEFORE initialize:", info);
-          
-          await program.methods.initializeFreelancer().rpc();
+      if (role === "client") {
+        await program.methods
+          .initializeClient()
+          .accounts({
+            client:        wallet.publicKey,
+            clientProfile: clientPda,
+            roleRegistry,
+          })
+          .rpc();
+      } else {
+        await program.methods
+          .initializeFreelancer()
+          .accounts({
+            freelancer:        wallet.publicKey,
+            freelancerProfile: freelancerPda,
+            roleRegistry,
+          })
+          .rpc();
       }
+
       localStorage.setItem(roleSetKey(wallet.publicKey.toBase58()), "true");
       setAsyncStep("idle");
       window.location.href =
@@ -120,74 +119,89 @@ export function RoleModal() {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#030712]/90 backdrop-blur-md px-4">
       <div className="w-full max-w-2xl">
 
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] text-xs font-medium text-zinc-400 mb-6">
             <span className="h-2 w-2 rounded-full bg-[#85DABE] animate-pulse" />
-            Wallet connected — one more step
+            Wallet connected — choose your role
           </div>
-          <h2
-            className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3"
-            style={{ fontFamily: "var(--font-heading, var(--font-sans))" }}
-          >
-            How do you want to use this platform?
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3">
+            How do you want to use Gazibo?
           </h2>
-          <p className="text-zinc-400 text-sm max-w-sm mx-auto">
-            This creates your on-chain profile. You can add both roles anytime
-            from Account Settings.
+          <p className="text-zinc-400 text-sm max-w-md mx-auto">
+            This creates your on-chain profile and permanently binds this wallet to one role.
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4 mb-6">
+        <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.05] px-4 py-3.5 mb-6">
+          <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs font-bold text-amber-300 mb-0.5">
+              This choice is permanent and recorded on-chain
+            </p>
+            <p className="text-xs text-amber-200/60 leading-relaxed">
+              Once you select a role, this wallet address is locked to it forever.
+              You need to create second wallet in Phantom for different role — it takes just 10 seconds.
+            </p>
+          </div>
+        </div>
 
+        <div className="grid sm:grid-cols-2 gap-4 mb-6">
           <button
             onClick={() => void choose("client")}
             disabled={asyncStep === "loading"}
-            className="group text-left rounded-2xl border border-[#174BD4]/20 bg-[#174BD4]/[0.04] p-6 hover:border-[#174BD4]/40 hover:bg-[#174BD4]/[0.08] disabled:opacity-50 transition-all duration-200 cursor-pointer"
+            className="group text-left rounded-2xl border border-[#174BD4]/20 bg-[#174BD4]/[0.04] p-6 hover:border-[#174BD4]/50 hover:bg-[#174BD4]/[0.10] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer"
           >
             <div className="h-10 w-10 rounded-xl bg-[#174BD4]/20 border border-[#174BD4]/30 flex items-center justify-center text-[#174BD4] mb-4">
               <Briefcase className="h-5 w-5" />
             </div>
-            <div className="text-xs font-bold uppercase tracking-[0.15em] text-[#174BD4] mb-2">
-              I&apos;m a Client
-            </div>
+            <div className="text-xs font-bold uppercase tracking-[0.15em] text-[#174BD4] mb-2">I&apos;m a Client</div>
             <div className="text-lg font-bold text-white mb-2">Hire Talent</div>
             <p className="text-sm text-zinc-400 leading-relaxed">
-              Browse freelancer gigs, chat to negotiate, and lock payment in
-              escrow before work starts. Pay only when you&apos;re satisfied.
+              Browse freelancer gigs, create jobs, and lock payment in escrow.
+              Pay only when satisfied with the delivered work.
             </p>
             <div className="mt-5 flex items-center gap-2 text-[#174BD4] text-sm font-semibold">
-              Get Started
-              <span className="group-hover:translate-x-0.5 transition-transform duration-200">→</span>
+              Select Client <span className="group-hover:translate-x-0.5 transition-transform">→</span>
             </div>
           </button>
 
           <button
             onClick={() => void choose("freelancer")}
             disabled={asyncStep === "loading"}
-            className="group text-left rounded-2xl border border-[#85DABE]/20 bg-[#85DABE]/[0.04] p-6 hover:border-[#85DABE]/40 hover:bg-[#85DABE]/[0.08] disabled:opacity-50 transition-all duration-200 cursor-pointer"
+            className="group text-left rounded-2xl border border-[#85DABE]/20 bg-[#85DABE]/[0.04] p-6 hover:border-[#85DABE]/50 hover:bg-[#85DABE]/[0.10] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer"
           >
             <div className="h-10 w-10 rounded-xl bg-[#85DABE]/15 border border-[#85DABE]/20 flex items-center justify-center text-[#85DABE] mb-4">
               <Zap className="h-5 w-5" />
             </div>
-            <div className="text-xs font-bold uppercase tracking-[0.15em] text-[#85DABE] mb-2">
-              I&apos;m a Freelancer
-            </div>
+            <div className="text-xs font-bold uppercase tracking-[0.15em] text-[#85DABE] mb-2">I&apos;m a Freelancer</div>
             <div className="text-lg font-bold text-white mb-2">Find Work</div>
             <p className="text-sm text-zinc-400 leading-relaxed">
               Post your gigs, accept jobs, deliver work, and get paid instantly
-              to your wallet. No invoices, no payment delays.
+              to your wallet. No invoices, no delays.
             </p>
             <div className="mt-5 flex items-center gap-2 text-[#85DABE] text-sm font-semibold">
-              Start Earning
-              <span className="group-hover:translate-x-0.5 transition-transform duration-200">→</span>
+              Select Freelancer <span className="group-hover:translate-x-0.5 transition-transform">→</span>
             </div>
           </button>
+        </div>
+
+        <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.05] px-4 py-3.5 mb-6">
+          <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs font-bold text-amber-300 mb-0.5">
+              Example:
+            </p>
+            <p className="text-xs text-amber-200/60 leading-relaxed">
+              If you select 'Hire Talent': this wallet will permanently work as a client profile.
+              <br/>You need to create another wallet in phantom to work as a 'Freelancer'.
+            </p>
+          </div>
         </div>
 
         {asyncStep === "loading" && (
           <div className="flex items-center justify-center gap-2 text-zinc-400 text-sm py-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Creating your on-chain profile — approve the transaction in your wallet…
+            Creating your on-chain profile — approve in your wallet…
           </div>
         )}
 

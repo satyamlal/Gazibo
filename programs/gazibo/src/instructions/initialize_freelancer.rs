@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
-use crate::constants::FREELANCER_PROFILE_SEED;
-use crate::state::FreelancerProfile;
+use crate::constants::{FREELANCER_PROFILE_SEED, ROLE_SEED};
+use crate::state::{FreelancerProfile, RoleRegistry, UserRole};
 
 #[derive(Accounts)]
 pub struct InitializeFreelancer<'info> {
@@ -17,14 +17,26 @@ pub struct InitializeFreelancer<'info> {
     )]
     pub freelancer_profile: Account<'info, FreelancerProfile>,
 
+    #[account(
+        init,
+        payer = freelancer,
+        space = RoleRegistry::SPACE,
+        seeds = [ROLE_SEED, freelancer.key().as_ref()],
+        bump,
+    )]
+    pub role_registry: Account<'info, RoleRegistry>,
+
     pub system_program: Program<'info, System>,
 }
 
 pub fn initialize_freelancer_handler(ctx: Context<InitializeFreelancer>) -> Result<()> {
-    let profile = &mut ctx.accounts.freelancer_profile;
-    let freelancer_key = ctx.accounts.freelancer.key();
+    let registry = &mut ctx.accounts.role_registry;
+    registry.wallet = ctx.accounts.freelancer.key();
+    registry.role = UserRole::Freelancer;
+    registry.bump = ctx.bumps.role_registry;
 
-    profile.freelancer = freelancer_key;
+    let profile = &mut ctx.accounts.freelancer_profile;
+    profile.freelancer = ctx.accounts.freelancer.key();
     profile.gig_counter = 0;
     profile.jobs_completed = 0;
     profile.total_earned = 0;
@@ -33,7 +45,7 @@ pub fn initialize_freelancer_handler(ctx: Context<InitializeFreelancer>) -> Resu
     profile.bump = ctx.bumps.freelancer_profile;
 
     emit!(FreelancerInitialized {
-        freelancer: freelancer_key,
+        freelancer: ctx.accounts.freelancer.key(),
     });
 
     Ok(())
