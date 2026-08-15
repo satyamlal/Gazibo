@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 
-use crate::constants::JOB_SEED;
+use crate::constants::{CLIENT_PROFILE_SEED, JOB_SEED};
 use crate::error::GaziboError;
-use crate::state::{JobAccount, JobStatus};
+use crate::state::{ClientProfile, JobAccount, JobStatus};
 
 #[derive(Accounts)]
 pub struct CancelJob<'info> {
@@ -21,6 +21,13 @@ pub struct CancelJob<'info> {
         bump = job_account.bump,
     )]
     pub job_account: Account<'info, JobAccount>,
+
+    #[account(
+        mut,
+        seeds = [CLIENT_PROFILE_SEED, client.key().as_ref()],
+        bump = client_profile.bump,
+    )]
+    pub client_profile: Account<'info, ClientProfile>,
 }
 
 pub fn cancel_job_handler(ctx: Context<CancelJob>) -> Result<()> {
@@ -28,13 +35,17 @@ pub fn cancel_job_handler(ctx: Context<CancelJob>) -> Result<()> {
 
     require!(
         job.status == JobStatus::Open,
-        GaziboError::JobNotCancellable
+        GaziboError::JobNotCancellable,
     );
+
+    let cp = &mut ctx.accounts.client_profile;
+    cp.active_jobs = cp.active_jobs.saturating_sub(1);
 
     emit!(JobCancelled {
         job_id: job.job_id,
         client: job.client,
         refund_amount: job.amount,
+        timestamp: Clock::get()?.unix_timestamp,
     });
 
     Ok(())
@@ -45,4 +56,5 @@ pub struct JobCancelled {
     pub job_id: u64,
     pub client: Pubkey,
     pub refund_amount: u64,
+    pub timestamp: i64,
 }
