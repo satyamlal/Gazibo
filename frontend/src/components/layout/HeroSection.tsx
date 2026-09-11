@@ -70,7 +70,7 @@ export function HeroSection() {
             {/* Decorative pill */}
             <div className="mt-10 inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-mono g-text-5 border g-border" style={{ letterSpacing: "0.12em" }}>
                 <Zap className="h-3 w-3 text-[#85DABE]" />
-                POWERED BY ANCHOR · SOLANA DEVNET
+                POWERED BY ANCHOR · SOLANA LOCALNET/DEVNET
             </div>
         </section>
     );
