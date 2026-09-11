@@ -44,7 +44,7 @@ export function SimpleWorkflow() {
                 {/* Steps */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-0 relative">
                     {/* Connector line */}
-                    <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-[rgba(0,0,0,0.1)] to-transparent" style={{ background: "linear-gradient(to right, transparent, var(--ga-border-mid), transparent)" }} />
+                    <div className="hidden md:block absolute top-16 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-[rgba(0,0,0,0.1)] to-transparent" style={{ background: "linear-gradient(to right, transparent, var(--ga-border-mid), transparent)" }} />
 
                     {STEPS.map((item) => (
                         <div key={item.step} className="relative flex flex-col items-center">
