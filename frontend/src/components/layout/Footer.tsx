@@ -59,17 +59,17 @@ export function Footer() {
                             Build, earn, and get paid — directly on Solana.
                         </p>
                         <div className="flex items-center gap-3">
-                        {SOCIAL_LINKS.map((link) => (
-                            <a
-                                key={link.name}
-                                href={link.href}
-                                className="h-8 w-8 rounded-lg g-bg-surface border g-border flex items-center justify-center g-text-4 hover:g-text hover:g-border-mid transition-all duration-200 g-shadow"
-                                aria-label={link.name}
-                                target={link.href !== "#" ? "_blank" : undefined}
-                                rel={link.href !== "#" ? "noreferrer" : undefined}>
-                                <link.icon className="h-3.5 w-3.5" />
-                            </a>
-                        ))}
+                            {SOCIAL_LINKS.map((link) => (
+                                <a
+                                    key={link.name}
+                                    href={link.href}
+                                    className="h-8 w-8 rounded-lg g-bg-surface border g-border flex items-center justify-center g-text-4 hover:g-text hover:g-border-mid transition-all duration-200 g-shadow"
+                                    aria-label={link.name}
+                                    target={link.href !== "#" ? "_blank" : undefined}
+                                    rel={link.href !== "#" ? "noreferrer" : undefined}>
+                                    <link.icon className="h-3.5 w-3.5" />
+                                </a>
+                            ))}
                         </div>
                     </div>
 
@@ -100,7 +100,7 @@ export function Footer() {
                 </div>
 
                 {/* Bottom bar */}
-                <div className="relative z-10 pt-6 border-t g-border flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="relative z-10 pt-50 border-t g-border flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="text-xs g-text-5 font-medium">
                         © {new Date().getFullYear()} Gazibo Labs. All rights reserved.
                     </div>
